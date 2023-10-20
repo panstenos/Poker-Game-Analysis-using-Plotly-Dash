@@ -11,10 +11,8 @@ The 'core' players in most of the games are a total of 6 people (me and 5 of my 
 
 The excel Data:
 
-Column1: Player names <br>
-Column2: Net profit/loss of players (use the excel sum function) <br>
-Column3: Profit Per Game (Divide column2 by the number of tables played) <br>
-Column4: Number of Tables Played (use the excel count function) <br>
-Rest of the: 
-  Column head: Session date
-  Column content: Session profit (or loss), if player did not attend the session leave blank so is shows as NaN in pandas
+|  | NET Profit/Loss |
+|-----:|-----------|
+|     | Javascript|
+|     2| Python    |
+|     3| SQL       |
