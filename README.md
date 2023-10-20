@@ -6,7 +6,7 @@ Once every two weeks or so, I gather with my friends and play poker. On January 
 
 After 25 sessions, I decided to see what anaylics I can extract from the data I have been loging throughout the year and present the findings to my friends! 
 
-## <u>About the dataset<\u>
+## <u>About the dataset</u>
 The 'core' players in most of the games are a total of 6 people (me and 5 of my friends). The 6 of us have played the majority of the games, so the analysis is based on us. The table has a capacity of 8 people so in each session, we will invite some 'complementary' players. Those players have played maximum 20% of the games, so in the analysis I group them. 
 
 The excel Data:
