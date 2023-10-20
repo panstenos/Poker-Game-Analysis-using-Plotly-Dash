@@ -9,7 +9,7 @@ After 25 sessions, I decided to see what anaylics I can extract from the data I 
 ## <u>About the dataset</u>
 The 'core' players in most of the games are a total of 6 people (me and 5 of my friends). The 6 of us have played the majority of the games, so the analysis is based on us. The table has a capacity of 8 people so in each session, we will invite some 'complementary' players. Those players have played maximum 20% of the games, so in the analysis I group them. 
 
-The excel Data:
+Sample of the excel table used for the analysis:
 
 |      |    NET    |    PPG    |  TABLES   |  14-Jan   |  21-Jan   |   28-Jan  |   10-Feb  | 
 |-----:|-----------|-----------|-----------|-----------|-----------|-----------|-----------|
