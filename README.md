@@ -11,8 +11,8 @@ The 'core' players in most of the games are a total of 6 people (me and 5 of my 
 
 The excel Data:
 
-|  | NET Profit/Loss |
-|-----:|-----------|
-|     | Javascript|
-|     2| Python    |
-|     3| SQL       |
+|      |    NET    |    PPG    |  TABLES   |  14-Jan   |  21-Jan   |   28-Jan  |   10-Feb  | 
+|-----:|-----------|-----------|-----------|-----------|-----------|-----------|-----------|
+| Panos|   43.85   |    1.9    |     23    |-0.95 |2.6 |-3.45 |-10.2 |
+|Ashish|   94.80   |    3.8    |     25    |-5 |24.6 |-24 |28.7 |
+| Chris|   82.00   |    3.6    |     23    |37.35 |1.15 |13.35 |7.8 |
