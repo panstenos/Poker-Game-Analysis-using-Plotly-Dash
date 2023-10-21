@@ -1,5 +1,5 @@
 # Poker-League-Game-Analysis
-Analysing profit/loss statistics from home poker games with friends
+Analysing profit/loss statistics from home poker games
 
 ## <u>Overview</u>
 Once every two weeks or so, I gather with my friends and play poker. On January 2023, I had an interesting idea and decided to start logging the profit/loss of each player after each session. This was an easy way to track the progress of each player, but we decided to make a bit more interesting. We all agreed to announce the prize for the player with the highest profit/session.
