@@ -17,7 +17,7 @@ Sample of the excel table used for the analysis:
 |Ashish|   94.80   |    3.8    |     25    |-5 |24.6 |-24 |28.7 |
 |Chris|   82.00   |    3.6    |     23    |37.35 |1.15 |13.35 |7.8 |
 
-## <u>The analysis</u>
+## <u>Data analysis</u>
 Due to the nature of the dataset, the analysis is mostly exploratory and focused on making insightful visualisations. Through the dashboard, the 6 main players will be able to view their personal progress and compare it to the other main players. 
 
 ## <u>The next step</u>
