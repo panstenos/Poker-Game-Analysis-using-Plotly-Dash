@@ -16,3 +16,9 @@ Sample of the excel table used for the analysis:
 |Panos|   43.85   |    1.9    |     23    |-0.95 |2.6 |-3.45 |-10.2 |
 |Ashish|   94.80   |    3.8    |     25    |-5 |24.6 |-24 |28.7 |
 |Chris|   82.00   |    3.6    |     23    |37.35 |1.15 |13.35 |7.8 |
+
+## <u>The analysis</u>
+Due to the nature of the dataset, the analysis is mostly exploratory and focused on making insightful visualisations. Through the dashboard, the 6 main players will be able to view their personal progress and compare it to the other main players. 
+
+## <u>The next step</u>
+Once the RFID tracking system is established, it will begin to collect additional data, including information about the cards held by each player and the way these hands were played. After obtaining these data, we can find how close players play to GTO (game theory optimal) and make a 'skill' statistic for the main players. 
