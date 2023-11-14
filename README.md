@@ -1,5 +1,8 @@
-# Poker-League-Game-Analysis
-Analysing and Visualising profit/loss data from a series of poker games
+# Poker-Game-Analysis-using-Plotly-Dash
+Analysing and Visualising profit/loss data from a series of poker games in a dashboard using python's plotly library.
+
+## <u>Ideas for your own analysis</u>
+In this project plotly dash is used to generate various analytics and metrics from the dataset. The code written provides a good platform on how to make an interractive dashboard using plotly. 
 
 ## <u>Overview</u>
 Once every two weeks or so, I gather with my friends and play poker. On January 2023, I had an interesting idea and decided to start logging the profit/loss of each player after each session. This was an easy way to track the progress of each player, but we decided to make a bit more interesting. We all agreed to announce the prize for the player with the highest profit/session.
