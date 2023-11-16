@@ -25,5 +25,5 @@ Notice I have used the excel functions for the first 3 columns of the dataset. D
 ## <u>The next step</u>
 Once the RFID tracking system is implemented, it will start gathering supplementary information, such as details about the cards held by each player and the strategies employed during each hand. With access to this data, we can assess how closely players played to the game theory optimal (GTO) and include more statistics for the players such as VPIP, ATS and C-Bet percentage.
 
-## <u>Inspiation</u>
+## <u>Inspiration for your own Project</u>
 If you're passionate about poker gatherings with friends, maybe its a good time to start tracking and crunching numbers! My personalized dashboard will indefinitely add a dynamic element to the poker experience and also offer insights into players' performance trends, fostering a more engaging and data-driven approach to the game. You will probably loose some poker games, but remember, if you are the poker maestro among your pals you will come on top on the long run! Best of luck.
