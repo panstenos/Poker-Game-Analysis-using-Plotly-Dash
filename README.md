@@ -1,16 +1,16 @@
 # Poker-Game-Analysis-using-Plotly-Dash
-Analysing and Visualising profit/loss data from a series of poker games in a dashboard using python's plotly library.
-
-## <u>Ideas for your own analysis</u>
-In this project plotly dash is used to generate various analytics and metrics from the dataset. The code written provides a good platform on how to make an interractive dashboard using plotly. 
+Analysing profit/loss data from a series of poker games and and Visualising the results of the analysis using Plotly Dash.
 
 ## <u>Overview</u>
-Once every two weeks or so, I gather with my friends and play poker. On January 2023, I had an interesting idea and decided to start logging the profit/loss of each player after each session. This was an easy way to track the progress of each player, but we decided to make a bit more interesting. We all agreed to announce the prize for the player with the highest profit/session.
+The main objective of this project is to develop a dynamic interface, utilizing Plotly Dash, that allows my friends to track their progress and that of fellow poker players through effective analytics deployed in the dashboard.
 
-After 25 sessions, I decided to see what anaylics I can extract from the data I have been loging throughout the year and present the findings to my friends! 
+Due to the nature of the dataset, and the scope of this project the analysis is mostly exploratory and focused on making insightful visualisations. In this project, plotly dash is extensively utilized to generate various analytics and metrics from the dataset. Most of the code is therefore concerned with visualisation of data rather than analysis. In the notebook, I use various plotting Plotly tools to visualise the results of my analysis such as Gauge, line and bar charts. I also use an interractive bar chart from Plotly Express and a table from dash_tables. The dashboard created is very interractive, allowing the user to check for the performance of a specific player, or look over the results of a particular session.
+
+## <u>Motivation for the Project</u>
+Every now and then, I gather with my friends and play poker. On January 2023, I had an interesting idea and decided to start logging the profit/loss of each player after each session. This was an easy way to track the progress of each player. At the beggining of the year, I exclusively utilized Excel's built-in sum() and average() functions for the dataset analysis. However, as the year progressed I had accumulated sufficient data and decided to showcase my expertise in Exploratory Data Analysis (EDA) and leverage my analytical skills to create something better ... an interactive dashboard!
 
 ## <u>About the dataset</u>
-The 'core' players in most of the games are a total of 6 people (me and 5 of my friends). The 6 of us have played the majority of the games, so the analysis is based on us. The table has a capacity of 8 people so in each session we will invite some additional players. Those players have played at most 20% of the games, so in the analysis I group their data.
+Each session consists of usually 8 and in some cases 9 players. However, most of the sessions are played by the same 6 people. Why you ask? Because we are all game-commited and we want to be #1 on the stats. Therefore, in each session we usually invite 2-3 guests to fill the table. These guests rotate and most of them have only played a few games in total (<5). Analysis is therefore focused on the 6 of us and those ones that have played enough games (cuttoff number of games is adjustable in the code).
 
 Sample of the excel table used for the analysis:
 
@@ -20,8 +20,10 @@ Sample of the excel table used for the analysis:
 |Ashish|   94.80   |    3.8    |     25    |-5 |24.6 |-24 |28.7 |
 |Chris|   82.00   |    3.6    |     23    |37.35 |1.15 |13.35 |7.8 |
 
-## <u>Data analysis</u>
-Due to the nature of the dataset, the analysis is mostly exploratory and focused on making insightful visualisations. Through the dashboard, the 6 main players will be able to view their personal progress and compare it to the other main players. 
+Notice I have used the excel functions for the first 3 columns of the dataset. Dont worry if your excel or csv file data dont have these columns, it should only take a few lines of code to reach the format of my table. 
 
 ## <u>The next step</u>
-Once the RFID tracking system is established, it will begin to collect additional data, including information about the cards held by each player and the way these hands were played. After obtaining these data, we can find how close players play to GTO (game theory optimal) and make a 'skill' statistic for the main players. 
+Once the RFID tracking system is implemented, it will start gathering supplementary information, such as details about the cards held by each player and the strategies employed during each hand. With access to this data, we can assess how closely players played to the game theory optimal (GTO) and include more statistics for the players such as VPIP, ATS and C-Bet percentage.
+
+## <u>Inspiration for your own Project</u>
+If you're passionate about poker gatherings with friends, maybe its a good time to start tracking and crunching numbers! My personalized dashboard will indefinitely add a dynamic element to the poker experience and also offer insights into players' performance trends, fostering a more engaging and data-driven approach to the game. You will probably loose some poker games, but remember, if you are the poker maestro among your pals you will come on top on the long run! Best of luck.
