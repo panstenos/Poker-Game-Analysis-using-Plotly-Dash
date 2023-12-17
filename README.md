@@ -22,8 +22,9 @@ Sample of the excel table used for the analysis:
 
 Notice I have used the excel functions for the first 3 columns of the dataset. Dont worry if your excel or csv file data dont have these columns, it should only take a few lines of code to reach the format of my table. 
 
-## <u>The next step</u>
-Once the RFID tracking system is implemented, it will start gathering supplementary information, such as details about the cards held by each player and the strategies employed during each hand. With access to this data, we can assess how closely players played to the game theory optimal (GTO) and include more statistics for the players such as VPIP, ATS and C-Bet percentage.
+## <u>The next steps</u>
+- Dataset will be uploaded to an SQL database. A webpage will be set so every player will be able to have access to the analytics generated. The backend will fetch data from the database and operate on a server to uphold the dynamic nature of the analytics.
+- Once the poker card tracking system is implemented, supplementary information will be gathered, such as the cards held by each player, ATS, VPIP, C-Bet% and others. With access to this data, we can assess how closely players played to the game theory optimal (GTO).
 
 ## <u>Inspiration for your own Project</u>
 If you're passionate about poker gatherings with friends, maybe its a good time to start tracking and crunching numbers! My personalized dashboard will indefinitely add a dynamic element to the poker experience and also offer insights into players' performance trends, fostering a more engaging and data-driven approach to the game. You will probably loose some poker games, but remember, if you are the poker maestro among your pals you will come on top on the long run! Best of luck.
