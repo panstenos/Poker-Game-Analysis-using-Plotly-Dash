@@ -3,28 +3,22 @@ import pandas as pd
 
 import dash
 from dash import Dash, dash_table
-#import dash_html_components as html
-import dash_core_components as dcc
 from dash import html
-#from dash_core_components import dcc
-from dash.dependencies import Output, Input, State
+from dash import dcc
+from dash.dependencies import Output, Input
 
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import plotly.express as px
 import matplotlib.pyplot as plt
-import seaborn as sns
-#%matplotlib inline
 
 import numpy as np
-from datetime import date, timedelta
-import datetime
 
 from sklearn.preprocessing import StandardScaler, MinMaxScaler, PolynomialFeatures
 from sklearn.linear_model import LinearRegression
 from sklearn.pipeline import Pipeline
 
-
+'################################################################################'
 import pathlib
 
 # heroku csv reading function
@@ -35,17 +29,20 @@ def load_data(data_file: str) -> pd.DataFrame:
     PATH = pathlib.Path(__file__).parent
     DATA_PATH = PATH.joinpath("data").resolve()
     return pd.read_csv(DATA_PATH.joinpath(data_file))
+'################################################################################'
 
 # Preprocessing
 df = load_data("data.csv")
+'################################################################################'
 df.set_index('Unnamed: 0', inplace=True)
 df.rename_axis(None, inplace=True) #remove index header
 
-dftime2 = df.iloc[:,2:].T.copy() # to be used for personal form calculation
-dftime3 = df.iloc[:,2:].T.copy() # to be used for global form calculation
+dftime2 = df.iloc[:,3:].T.copy() # to be used for personal form calculation
+dftime3 = dftime2.copy() # to be used for global form calculation
 df.fillna(0, inplace=True)
 dftime = df.iloc[:,2:].T.copy()
 
+################################################################################
 
 # Preprocessing for profit/loss against time analysis
 crit_tables = 6 # plotly graph will only show player who have player at least this number of games
@@ -75,20 +72,22 @@ def melt_data(dftime):
     dftime_melt['Net Profit/Loss'] = round(dftime_melt['Net Profit/Loss'],2) # round all values to 2 decimal points
     return dftime_melt
 
+################################################################################
 
 # Group Analysis
 
 # Session Results
 def make_table(row):
-    selected_data = dftime2.iloc[row+1:row + 2].dropna(axis=1).to_dict('records')
+    selected_data = dftime2.iloc[row:row + 1].dropna(axis=1).to_dict('records')
     fig = dash_table.DataTable(
         id='results-table',  # Specify the id for the DataTable
-        columns=[{'name': col, 'id': col} for col in dftime2.drop(index='TABLES').iloc[row:row + 1].dropna(axis=1).columns],
+        columns=[{'name': col, 'id': col} for col in dftime2.iloc[row:row + 1].dropna(axis=1).columns],
         data=selected_data,
         style_table={'fontSize': 22},  # Set the font size
     )
     return fig
 
+################################################################################
 
 # Current Profit/Loss
 def Status_bar(player_list):
@@ -122,6 +121,7 @@ def Status_bar(player_list):
 
     return fig
 
+################################################################################
 
 # Time Lapse Bar Plot
 def Time_Lapse(player_list):
@@ -149,17 +149,19 @@ def Time_Lapse(player_list):
     fig.layout.updatemenus[0].buttons[0].args[1]["frame"]["duration"] = 600
     return fig
 
+################################################################################
 
 # Histogram of performance
 namelist = dftime.columns[1:-1].to_list()
 
+################################################################################
 
 # Player Analysis
 def Current_profit_loss(person):
     def get_ppg(person): # find the previous profit per game statistic
         ppg = df.loc[person]['PPG']
         games_played = df.loc[person]['TABLES']
-        last_p_l = df.loc[person][-1]
+        last_p_l = df.at[person, df.columns[-1]]
         net = dftime.loc[dftime.index[-1], person]
         (ppg_ref := ppg) if np.isnan(dftime2[person].tail(1).values) else (ppg_ref := (net - last_p_l) / (games_played - 1))
         return round(ppg_ref, 2)
@@ -204,6 +206,7 @@ def Current_profit_loss(person):
 
     return fig
 
+################################################################################
 
 # Session Progress Plot
 def Progress_Session(person):
@@ -211,11 +214,11 @@ def Progress_Session(person):
 
     fig = px.line() #initialise figure
 
-    #Add the actual data line
+    # Add the actual data line
     act_line = go.Scatter(x=x_data, y=dftime[person], mode='lines', name='Actual', line=dict(color='blue'))
     fig.add_trace(act_line)
 
-    #make a pipeline that first transforms the data to match a polynomial of n degree and then fits them using linear regression
+    # make a pipeline that first transforms the data to match a polynomial of n degree and then fits them using linear regression
     pipeline = Pipeline([
         ('poly_features', PolynomialFeatures(degree=3)),
         ('linear_regression', LinearRegression())])
@@ -223,9 +226,13 @@ def Progress_Session(person):
     pipeline.fit(np.array(x_data).reshape(-1, 1), dftime[person]) #fit the data
     Y_pred = pipeline.predict(np.array(x_data).reshape(-1, 1)) #predict the values
 
-    #Add the predicted data line
+    # Add the predicted data line
     trendline = go.Scatter(x=x_data, y=Y_pred, mode='lines', name='Trendline', line=dict(color='red'))
-    fig.add_trace(trendline)
+    #fig.add_trace(trendline)
+
+    # Add the 5-day average data
+    average_5_game = go.Scatter(x=np.arange(3, dftime[person].shape[0]-1, 1), y=dftime[person].rolling(window=5).mean().dropna().values, mode='lines', name='5-game average', line=dict(color='green'))
+    fig.add_trace(average_5_game)
 
     fig.update_layout(
         title='Session Progress',
@@ -244,6 +251,7 @@ def Progress_Session(person):
     )
     return fig
 
+################################################################################
 
 # Monthly Progress Plot
 def Progress_Monthly(person):
@@ -279,14 +287,14 @@ def Progress_Monthly(person):
 
     return fig
 
+################################################################################
 
 # Personal and Global Form Preprocessing
 def Form_Preprocessing(person, dftime2, dftime3):
     # Personal Form
     dftime5 = dftime2[person].dropna()
-    dftime5.drop(index='TABLES' , inplace= True) 
-    n = 5
-    dftime5 = pd.Series([sum(dftime5[i:i+n]) for i in range(0, len(dftime5)-n+1, 1)]) # sum 3 in a row together
+    n = 4
+    dftime5 = pd.Series([sum(dftime5[i:i+n]) for i in range(0, len(dftime5)-n+1, 1)]) # sum n in a row together
     x = np.array(dftime5).reshape(-1,1) #reshape to fit transform
     filtered_data = StandardScaler().fit_transform(x) #normalise first 
     filtered_data = MinMaxScaler().fit_transform(filtered_data)*10 #convert normalised data into min, max
@@ -294,7 +302,7 @@ def Form_Preprocessing(person, dftime2, dftime3):
 
     # Global Form
     # normalise the performance of all players in the playerlist based on the performance of these people:
-    dftime3 = dftime3[dftime3.columns[dftime3.columns.isin(['Ashish', 'Sid', 'Panos', 'Chris', 'Kartik', 'Tanish'])]] 
+    dftime3 = dftime3[dftime3.columns[dftime3.columns.isin(namelist)]] 
     if 'TABLES' in dftime3.index:  
         dftime3.drop(index='TABLES' , inplace= True) #drop row with the number of tables
     person_column = dftime3.pop(person)
@@ -302,13 +310,15 @@ def Form_Preprocessing(person, dftime2, dftime3):
     global_list = []
     for column in dftime3:
         dftime4 = dftime3[column].dropna() #drop all NaN values
-        global_list.extend(pd.Series([sum(dftime4[i:i+3]) for i in range(0, len(dftime4)-2, 1)])) # sum 3 in a row together
+        global_list.extend(pd.Series([sum(dftime4[i:i+n]) for i in range(0, len(dftime4)-n+1, 1)])) # sum 3 in a row together
     filtered_data2 = StandardScaler().fit_transform(np.array(global_list).reshape(-1, 1)) #normalise first 
     filtered_data2 = MinMaxScaler().fit_transform(filtered_data2)*10 #convert normalised data into min, max
-    filtered_data2 = [np.round(datum * 10) / 10 for datum in filtered_data2]
+    filtered_data2 = [np.round(datum * 10) / 10 for datum in filtered_data2] #round data
     
     return filtered_data, filtered_data2
+# peronal form data, global form data
 
+################################################################################
 
 # Personal and Global Form Gauge charts
 def Gauge_Charts(person):
@@ -320,10 +330,10 @@ def Gauge_Charts(person):
     # Define data for the first gauge chart
     trace1 = (go.Indicator(
         mode = "gauge+number+delta",
-        value = float(filtered_data[-1]),
+        value = float(filtered_data[-1][0]),
         domain = {'x': [0, 1], 'y': [0, 1]},
         title = {'text': "{} Personal Form".format(person), 'font': {'size': 20}},
-        delta = {'reference': int(filtered_data[-2]), 'increasing': {'color': "RebeccaPurple"}},
+        delta = {'reference': int(filtered_data[-2][0]), 'increasing': {'color': "RebeccaPurple"}},
         gauge = {
             'axis': {'range': [None, 10], 'tickwidth': 1, 'tickcolor': "darkblue"},
             'bar': {'color': "darkblue"},
@@ -338,10 +348,10 @@ def Gauge_Charts(person):
     # Define data for the second gauge chart
     trace2 = (go.Indicator(
         mode = "gauge+number+delta",
-        value = float(filtered_data2[-1]),
+        value = float(filtered_data2[-1][0]),
         domain = {'x': [0, 1], 'y': [0, 1]},
         title = {'text': "{} Global Form".format(person), 'font': {'size': 20}},
-        delta = {'reference': int(filtered_data2[-2]), 'increasing': {'color': "RebeccaPurple"}},
+        delta = {'reference': int(filtered_data2[-2][0]), 'increasing': {'color': "RebeccaPurple"}},
         gauge = {
             'axis': {'range': [None, 10], 'tickwidth': 1, 'tickcolor': "darkblue"},
             'bar': {'color': "darkblue"},
@@ -367,10 +377,12 @@ def Gauge_Charts(person):
 
     return fig
 
+################################################################################
 
 
 
 
+################################################################################
 
 # Dash Board
 app = dash.Dash(__name__)
@@ -382,7 +394,7 @@ server = app.server
 # Define the layout of the dashboard
 app.layout = html.Div([
     dcc.Tabs(id="tabs", value='personal', children=[
-        dcc.Tab(label='Personal Data', value='personal'),
+        dcc.Tab(label='Player Data', value='personal'),
         dcc.Tab(label='Table Data', value='global'),
     ]),
     html.Div(id='page-content'),
@@ -391,31 +403,31 @@ app.layout = html.Div([
 # Callback to switch between subpages
 @app.callback(Output('page-content', 'children'), Input('tabs', 'value'))
 def render_content(tab):
-    if tab == 'personal': #break into tabs
+    if tab == 'personal':
         return html.Div([
-            dcc.Dropdown( #make a dropdown section for the person at interrest
+            dcc.Dropdown(
                 id='Player',
                 options=[{'label': person, 'value': person} for person in namelist],
                 value=namelist[1]  # Set the default value
-               ),
+            ),
             html.Div(id='current-profit'),
             html.Div(id='session-progress'),       
-            html.Div(id='monthly-progress'), # Container for the monthly personal data
-            html.Div(id='gauge-chart'), # Container for the gauge charts
+            html.Div(id='monthly-progress'),  # Container for the monthly personal data
+            html.Div(id='gauge-chart'),  # Container for the gauge charts
         ])
     elif tab == 'global':
         return html.Div([
             dcc.Dropdown(
                 id='row-dropdown',
-                options=[{'label': '{1} - Session {0}'.format(i+1, dftime2.index[1+i].strftime('%d-%b')), 'value': i} for i in range(dftime2.shape[0]-1)],
-                value= dftime2.shape[0]-2,  # Default to the last game
+                options=[{'label': '{1} - Session {0}'.format(i+1, pd.to_datetime(dftime2.index.values[i]).strftime('%d-%b')), 'value': i} for i in range(dftime2.shape[0])],
+                value=dftime2.shape[0]-2,  # Default to the last game
                 style={'width': '50%'}
             ),
             html.Div(id='results-table-container', style={'margin-bottom': '50px'}),  # Change id to 'results-table-container'
             dcc.Checklist(
                 id='Name-Checklist',
                 options=[{'label': person, 'value': person} for person in namelist],
-                value=namelist[:5], # select the first 5 people from the namelist
+                value=namelist[:5],  # Select the first 5 people from the namelist
                 labelStyle={'font-size': '24px',},  # Increase font size and center labels
                 inline=True,
             ),

@@ -1,1 +1,0 @@
-web: gunicorn --chdir MyCSVApp\src app:server
