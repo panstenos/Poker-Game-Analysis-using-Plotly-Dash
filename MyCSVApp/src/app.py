@@ -447,6 +447,7 @@ def update_current_profit_loss_value(selected_person):
 # Callback to update the progress per session chart based on the selected person    
 @app.callback(Output('session-progress', 'children'), Input('Player', 'value'))
 def update_progress_session_chart(selected_person):
+
     fig = Progress_Session(selected_person)
     return dcc.Graph(figure=fig)
 
