@@ -1,6 +1,9 @@
 # Import Libraries
 import pandas as pd
 
+import matplotlib
+matplotlib.use('agg')
+
 import dash
 from dash import Dash, dash_table
 from dash import html
