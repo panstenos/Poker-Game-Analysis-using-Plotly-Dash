@@ -481,5 +481,5 @@ def update_graph(selected_people):
     return dcc.Graph(figure=fig)
 
 if __name__ == '__main__':
-    app.run_server(debug=True)
+    app.run_server(debug=False)
     #app.run_server(port=8050, threaded=False)
