@@ -132,7 +132,7 @@ def Time_Lapse(player_list):
     dftime_melt = melt_data(dftime)
     dftime_melt = dftime_melt[dftime_melt['Player'].isin(player_list)] #update the dataframe to include only the names selected
     fig = px.bar(dftime_melt,  
-                x='Net Profit/Loss', y = "Player", animation_frame="Date", range_x=(-200,300),hover_data=['Net Profit/Loss'],color='Net Profit/Loss', width=1600, height=600, range_color=(-500,200), orientation= 'h')
+                x='Net Profit/Loss', y = "Player", animation_frame="Date", range_x=(-200,300),hover_data=['Net Profit/Loss'],color='Net Profit/Loss', range_color=(-500,200), orientation= 'h')
     fig.update_layout(
         title="Time Lapse of Profit/Loss of every player",
         xaxis_title="Date",
