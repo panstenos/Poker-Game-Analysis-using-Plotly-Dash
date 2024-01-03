@@ -218,13 +218,6 @@ def Progress_Session(player_list, person):
 
     fig = px.line() #initialise figure
 
-    # Add the progress lines of each other player, truncate to 7 players
-    color_palette = ['red', 'purple', 'orange', 'pink', 'gray', 'brown', 'green'] # define color palette
-
-    for player in range(len(player_list[:7])):
-        player_line = go.Scatter(x=x_data, y=dftime[player_list[player]], mode='lines', name=player_list[player], line=dict(color=color_palette[player]))
-        fig.add_trace(player_line)
-
     # Add the actual data line
     act_line = go.Scatter(x=x_data, y=dftime[person], mode='lines', name='Actual ({})'.format(person), line=dict(color='blue'))
     fig.add_trace(act_line)
@@ -232,6 +225,13 @@ def Progress_Session(player_list, person):
     # Add the 5-day average data
     average_5_game = go.Scatter(x=np.arange(3, dftime[person].shape[0]-1, 1), y=dftime[person].rolling(window=5).mean().dropna().values, mode='lines', name='5-game avg ({})'.format(person), line=dict(color='black'))
     fig.add_trace(average_5_game)
+
+    # Add the progress lines of each other player, truncate to 7 players
+    color_palette = ['red', 'purple', 'orange', 'pink', 'gray', 'brown', 'green'] # define color palette
+
+    for player in range(len(player_list[:7])):
+        player_line = go.Scatter(x=x_data, y=dftime[player_list[player]], mode='lines', name=player_list[player], line=dict(color=color_palette[player]))
+        fig.add_trace(player_line)
     
     fig.update_layout(
         title='Session Progress',
@@ -259,7 +259,7 @@ def Progress_Monthly(player_list, person):
     fig = px.line() #initialise figure
 
     # Add the player data line
-    player_line = go.Scatter(x=x_data, y=dftime[person], mode='lines', name='({})'.format(person), line=dict(color='blue'))
+    player_line = go.Scatter(x=x_data, y=dftime[person], mode='lines', name=person, line=dict(color='blue'))
     fig.add_trace(player_line)
 
     # Add the progress lines of each other player, truncate to 7 players
