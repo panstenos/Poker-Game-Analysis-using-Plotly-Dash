@@ -23,6 +23,7 @@ from sklearn.pipeline import Pipeline
 
 '################################################################################'
 import pathlib
+import os
 
 # heroku csv reading function
 def load_data(data_file: str) -> pd.DataFrame:
@@ -482,5 +483,4 @@ def update_graph(selected_people):
     return dcc.Graph(figure=fig)
 
 if __name__ == '__main__':
-    app.run_server(debug=False)
-    #app.run_server(port=8050, threaded=False)
+    app.run_server(debug=False, port=int(os.environ.get('PORT', 8050)))
