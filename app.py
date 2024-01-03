@@ -253,19 +253,21 @@ def Progress_Session(player_list, person):
 ################################################################################
 
 # Monthly Progress Plot
-def Progress_Monthly(person):
-    fig, ax = plt.subplots(figsize=(12, 5))
-    ax.plot(pd.to_datetime(dftime['Date'] + f"-{2023}", format='%d-%b-%Y'), dftime[person], label=person)
-    ax.set_ylabel('Net Profit/Loss')
-    ax.set_xlabel('Month (2023)')
-    ax.xaxis.set_major_formatter(plt.matplotlib.dates.DateFormatter("%b"))
-    ax.legend()
-    ax.grid()
-    
-    # Convert Matplotlib figure to Plotly figure
-    x = pd.to_datetime(dftime['Date'] + f"-{2023}", format='%d-%b-%Y')
-    y = dftime[person]
-    fig = go.Figure(data=[go.Scatter(x=x, y=y)])
+def Progress_Monthly(player_list, person):  
+    x_data = pd.to_datetime(dftime['Date'] + f"-{2023}", format='%d-%b-%Y')
+
+    fig = px.line() #initialise figure
+
+    # Add the player data line
+    player_line = go.Scatter(x=x_data, y=dftime[person], mode='lines', name='({})'.format(person), line=dict(color='blue'))
+    fig.add_trace(player_line)
+
+    # Add the progress lines of each other player, truncate to 7 players
+    color_palette = ['red', 'purple', 'orange', 'pink', 'gray', 'brown', 'green'] # define color palette
+
+    for player in range(len(player_list[:7])):
+        player_line = go.Scatter(x=x_data, y=dftime[player_list[player]], mode='lines', name=player_list[player], line=dict(color=color_palette[player]))
+        fig.add_trace(player_line)
 
     # Customize the layout, including the title
     fig.update_layout(
@@ -386,8 +388,10 @@ def Gauge_Charts(person):
 app = dash.Dash(__name__)
 app.config.suppress_callback_exceptions = True
 
+'################################################################################'
 # Declare server for Heroku deployment. Needed for Procfile.
 server = app.server
+'################################################################################'
 
 # Define the layout of the dashboard
 app.layout = html.Div([
@@ -452,17 +456,16 @@ def update_checklist(selected_player):
 def update_checklist_default_value(selected_player):
     return []
 
-# Callback to update the progress per session chart based on the selected person    
+# Callback to update the progress per session chart based on the selected person from the dropdown and the player list from the checklist
 @app.callback(Output('session-progress', 'children'), [Input('Comparison-Checklist', 'value'), Input('Player', 'value')])
 def update_progress_session_chart(selected_people_checklist, selected_person_dropdown):
     fig = Progress_Session(selected_people_checklist, selected_person_dropdown)
     return dcc.Graph(figure=fig)
 
-
 # Callback to update the monthly progress chart based on the selected person    
-@app.callback(Output('monthly-progress', 'children'), Input('Player', 'value'))
-def update_progress_montly_chart(selected_person):
-    fig = Progress_Monthly(selected_person)
+@app.callback(Output('monthly-progress', 'children'), [Input('Comparison-Checklist', 'value'), Input('Player', 'value')])
+def update_progress_montly_chart(selected_people_checklist, selected_person_dropdown):
+    fig = Progress_Monthly(selected_people_checklist, selected_person_dropdown)
     return dcc.Graph(figure=fig)
 
 # Callback to update the gauge charts based on the selected person  
@@ -488,6 +491,7 @@ def update_graph(selected_people):
 def update_graph(selected_people):
     fig = Time_Lapse(selected_people)
     return dcc.Graph(figure=fig)
+
 
 if __name__ == '__main__':
     app.run_server(debug=False, port=int(os.environ.get('PORT', 8050)))
