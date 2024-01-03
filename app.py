@@ -213,31 +213,26 @@ def Current_profit_loss(person):
 ################################################################################
 
 # Session Progress Plot
-def Progress_Session(person):
+def Progress_Session(player_list, person):
     x_data = np.arange(1, len(dftime[person]) + 1)
 
     fig = px.line() #initialise figure
 
+    # Add the progress lines of each other player, truncate to 7 players
+    color_palette = ['red', 'purple', 'orange', 'pink', 'gray', 'brown', 'green'] # define color palette
+
+    for player in range(len(player_list[:7])):
+        player_line = go.Scatter(x=x_data, y=dftime[player_list[player]], mode='lines', name=player_list[player], line=dict(color=color_palette[player]))
+        fig.add_trace(player_line)
+
     # Add the actual data line
-    act_line = go.Scatter(x=x_data, y=dftime[person], mode='lines', name='Actual', line=dict(color='blue'))
+    act_line = go.Scatter(x=x_data, y=dftime[person], mode='lines', name='Actual ({})'.format(person), line=dict(color='blue'))
     fig.add_trace(act_line)
 
-    # make a pipeline that first transforms the data to match a polynomial of n degree and then fits them using linear regression
-    pipeline = Pipeline([
-        ('poly_features', PolynomialFeatures(degree=3)),
-        ('linear_regression', LinearRegression())])
-
-    pipeline.fit(np.array(x_data).reshape(-1, 1), dftime[person]) #fit the data
-    Y_pred = pipeline.predict(np.array(x_data).reshape(-1, 1)) #predict the values
-
-    # Add the predicted data line
-    trendline = go.Scatter(x=x_data, y=Y_pred, mode='lines', name='Trendline', line=dict(color='red'))
-    #fig.add_trace(trendline)
-
     # Add the 5-day average data
-    average_5_game = go.Scatter(x=np.arange(3, dftime[person].shape[0]-1, 1), y=dftime[person].rolling(window=5).mean().dropna().values, mode='lines', name='5-game average', line=dict(color='green'))
+    average_5_game = go.Scatter(x=np.arange(3, dftime[person].shape[0]-1, 1), y=dftime[person].rolling(window=5).mean().dropna().values, mode='lines', name='5-game avg ({})'.format(person), line=dict(color='black'))
     fig.add_trace(average_5_game)
-
+    
     fig.update_layout(
         title='Session Progress',
         xaxis_title='Session Number',
@@ -320,7 +315,6 @@ def Form_Preprocessing(person, dftime2, dftime3):
     filtered_data2 = [np.round(datum * 10) / 10 for datum in filtered_data2] #round data
     
     return filtered_data, filtered_data2
-# peronal form data, global form data
 
 ################################################################################
 
@@ -412,9 +406,10 @@ def render_content(tab):
             dcc.Dropdown(
                 id='Player',
                 options=[{'label': person, 'value': person} for person in namelist],
-                value=namelist[1]  # Set the default value
+                value=namelist[2]  # Set the default value
             ),
             html.Div(id='current-profit'),
+            dcc.Checklist(id='Comparison-Checklist', value=[], inline=True),
             html.Div(id='session-progress'),       
             html.Div(id='monthly-progress'),  # Container for the monthly personal data
             html.Div(id='gauge-chart'),  # Container for the gauge charts
@@ -445,12 +440,24 @@ def update_current_profit_loss_value(selected_person):
     fig = Current_profit_loss(selected_person)
     return dcc.Graph(figure=fig)
 
-# Callback to update the progress per session chart based on the selected person    
-@app.callback(Output('session-progress', 'children'), Input('Player', 'value'))
-def update_progress_session_chart(selected_person):
+# Callback for updating the checklist
+@app.callback(Output('Comparison-Checklist', 'options'), Input('Player', 'value'))
+def update_checklist(selected_player):
+    remaining_names = [name for name in namelist if name != selected_player] # namelist without the selected name from dcc.Dropdown
+    checklist_options = [{'label': name, 'value': name} for name in remaining_names]
+    return checklist_options
 
-    fig = Progress_Session(selected_person)
+# Callback for setting the default value to an empty list
+@app.callback(Output('Comparison-Checklist', 'value'), [Input('Player', 'value')])
+def update_checklist_default_value(selected_player):
+    return []
+
+# Callback to update the progress per session chart based on the selected person    
+@app.callback(Output('session-progress', 'children'), [Input('Comparison-Checklist', 'value'), Input('Player', 'value')])
+def update_progress_session_chart(selected_people_checklist, selected_person_dropdown):
+    fig = Progress_Session(selected_people_checklist, selected_person_dropdown)
     return dcc.Graph(figure=fig)
+
 
 # Callback to update the monthly progress chart based on the selected person    
 @app.callback(Output('monthly-progress', 'children'), Input('Player', 'value'))
