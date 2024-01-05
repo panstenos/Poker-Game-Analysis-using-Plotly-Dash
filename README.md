@@ -64,7 +64,8 @@ df.to_csv("data/data.csv") # convert to csv and upload it to the relevant direct
 ```
 
 ## <u>The next steps</u>
-- Dataset will be uploaded to an SQL database. A webpage will be set so every player will be able to have access to the analytics generated. The backend will fetch data from the database and operate on a server to uphold the dynamic nature of the analytics.
+- Read the cards dealt using MFRC522 RFID readers connected to the Raspberry Pi 4.
+- Read the board using object detection techniques. An IP camera connected to the RPi 4 can be used for that purpose. 
 - Once the poker card tracking system is implemented, supplementary information will be gathered, such as the cards held by each player, ATS, VPIP, C-Bet% and others. With access to this data, we can assess how closely players played to the game theory optimal (GTO).
 
 ## <u>Inspiration for your own Project</u>
