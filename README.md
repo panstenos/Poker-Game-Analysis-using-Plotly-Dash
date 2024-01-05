@@ -46,7 +46,7 @@ def load_data(data_file: str) -> pd.DataFrame:
 # load the data
 df = load_data("data.csv")
 ```
-And after initiating the app (dash.Dash(__name__))
+And after initiating the app (```dash.Dash(__name__)```)
 ```python
 # Declare server for Heroku deployment. Needed for Procfile.
 server = app.server
