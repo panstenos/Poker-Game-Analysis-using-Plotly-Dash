@@ -26,9 +26,9 @@ Notice I have used the excel functions for the first 3 columns of the dataset. D
 - Dashboard was deployed using Heroku through github. To deploy sucessfully you need your requirements.txt, runtime.txt and Procfile (no extension) in your top level directory.
 - Make sure that the python version specified in runtime.txt is supported from Heroku. Check the supported python versions [here](https://devcenter.heroku.com/articles/python-support)
 - Your procfile should specify what you are trying to achieve with your code. In my case, I wanted to deploy my app.py file to the web and run it on a server. Therefore the content on my Procfile was:
-'''python
+```python
 web: gunicorn app:server
-'''
+```
 - 
 ## <u>The next steps</u>
 - Dataset will be uploaded to an SQL database. A webpage will be set so every player will be able to have access to the analytics generated. The backend will fetch data from the database and operate on a server to uphold the dynamic nature of the analytics.
