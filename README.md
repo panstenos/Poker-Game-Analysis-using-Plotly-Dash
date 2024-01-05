@@ -23,7 +23,8 @@ Sample of the excel table used for the analysis:
 Notice I have used the excel functions for the first 3 columns of the dataset. Dont worry if your excel or csv file data dont have these columns, it should only take a few lines of code to reach the format of my table. 
 
 ## <u>Deployment</u>
-- Dashboard was deployed using Heroku through github. To deploy sucessfully you need your requirements.txt, runtime.txt and Procfile (no extension) in your top level directory.
+- Dashboard was deployed using Heroku through github. Automatic deployment was configured which updates the server after pushing new code to github.
+- To deploy sucessfully you need your requirements.txt, runtime.txt and Procfile (no extension) in your top level directory.
 - Make sure that the python version specified in runtime.txt is supported from Heroku. Check the supported python versions [here](https://devcenter.heroku.com/articles/python-support)
 - Your procfile should specify what you are trying to achieve with your code. In my case, I wanted to deploy my app.py file to the web and run it on a server. Therefore the content on my Procfile was:
 ```python
@@ -50,6 +51,16 @@ And after initiating the app using ```dash.Dash(__name__)```
 ```python
 # Declare server for Heroku deployment. Needed for Procfile.
 server = app.server
+```
+
+Files in the .gitignore include:
+- data.xslx excel file where I write the new data after a poker session
+- test.ipynb notebook that I use to test that the new code works before commiting to github
+- data_update.ipynb that converts the excel to a csv file, data.csv, saving it in the directory of the original csv file and overwriting it (since they have the same name).
+```python
+import pandas as pd
+df = pd.read_excel("data.xlsx", index_col=0) # read from excel file and use the first column as the index of the dataframe
+df.to_csv("data/data.csv") # convert to csv and upload it to the relevant directory
 ```
 
 ## <u>The next steps</u>
