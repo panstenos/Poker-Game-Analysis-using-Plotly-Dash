@@ -29,7 +29,29 @@ Notice I have used the excel functions for the first 3 columns of the dataset. D
 ```python
 web: gunicorn app:server
 ```
-- 
+- Finally make sure to keep the following lines in your python file to be able to deploy to Heroku:
+```python
+import pathlib
+import os
+
+# heroku csv reading function
+def load_data(data_file: str) -> pd.DataFrame:
+    '''
+    Load data from /data directory
+    '''
+    PATH = pathlib.Path(__file__).parent
+    DATA_PATH = PATH.joinpath("data").resolve()
+    return pd.read_csv(DATA_PATH.joinpath(data_file))
+
+# load the data
+df = load_data("data.csv")
+```
+And after initiating the app (dash.Dash(__name__))
+```python
+# Declare server for Heroku deployment. Needed for Procfile.
+server = app.server
+```
+
 ## <u>The next steps</u>
 - Dataset will be uploaded to an SQL database. A webpage will be set so every player will be able to have access to the analytics generated. The backend will fetch data from the database and operate on a server to uphold the dynamic nature of the analytics.
 - Once the poker card tracking system is implemented, supplementary information will be gathered, such as the cards held by each player, ATS, VPIP, C-Bet% and others. With access to this data, we can assess how closely players played to the game theory optimal (GTO).
