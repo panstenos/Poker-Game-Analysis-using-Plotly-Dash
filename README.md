@@ -1,6 +1,8 @@
 # Poker-Game-Analysis-using-Plotly-Dash
 Analysing profit/loss data from a series of poker games, Visualising the results of the analysis using Plotly Dash and deploying the model using Heroku!
 
+Check the app [here!][https://casino-5f-958d8779bafe.herokuapp.com/]
+
 ## <u>Overview</u>
 The main objective of this project is to develop a dynamic interface, utilizing Plotly Dash, that allows my friends to track their progress and that of fellow poker players through effective analytics deployed in the dashboard.
 
