@@ -353,7 +353,7 @@ def player_history(selected_player, df_raw):
     df_data_person = df.iloc[:,3:].T
     df_data_person.index = pd.to_datetime(df_data_person.index, dayfirst=True).strftime('%y%m%d') #convert to this format to sort the dates
     df_data_person = df_data_person.sort_index(ascending=False)
-    df_data_person.index = pd.to_datetime(df_data_person.index).strftime('%b-%d %Y')
+    df_data_person.index = pd.to_datetime(df_data_person.index, format='%y%m%d').strftime('%b-%d %Y')
     df_data_person = df_data_person[[selected_player]].dropna()
     df_data_person.reset_index(inplace=True)
     df_data_person.rename(columns={'index':'Date', selected_player:'Profit'}, inplace=True)
