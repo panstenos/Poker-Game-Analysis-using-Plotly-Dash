@@ -89,7 +89,7 @@ def df_selected_year(df, selected_year):
             dftime.at[index, col] = cumulative_sums[col]
 
     # Convert 'Date' column to datetime format
-    dftime['Date'] = pd.to_datetime(dftime['Date'])
+    dftime['Date'] = pd.to_datetime(dftime['Date'], format='%d/%m/%Y')
 
     # Format the 'Date' column
     dftime['Date'] = dftime['Date'].dt.strftime('%d-%b')
@@ -202,7 +202,7 @@ def Current_profit_loss(person, selected_year, df_raw):
         last_p_l = df.at[person, df.columns[-1]]
         net = dftime.loc[dftime.index[-1], person]
         (ppg_ref := ppg) if np.isnan(dftime2[person].tail(1).values) else (ppg_ref := (net - last_p_l) / (games_played - 1))
-        return round(ppg_ref, 2)
+        return round(ppg_ref, 1)
     
     def get_position(dftime, person):
         position = dftime.iloc[-1,1:-1].rank(ascending=False)
@@ -213,14 +213,14 @@ def Current_profit_loss(person, selected_year, df_raw):
     
     # Create a subplot grid with 1 row and 4 columns
     fig = make_subplots(rows=1, cols=4)
-    
+
     # Define data for the first gauge chart
     trace1 = (go.Indicator(
         mode = "number+delta",
         value= get_position(dftime, person)[0],
         title={'text': "Ranking"},
-        delta= {'reference': get_position(dftime, person)[1], 'decreasing': {'color': "#006C5B"}, 'increasing': {'color': "red"}},
-        ))
+        delta= {'reference': 2*get_position(dftime, person)[0] - get_position(dftime, person)[1], 'increasing': {'color': "#006C5B"}, 'decreasing': {'color': "red"}},
+        )) # to reverse the sign of the reference number: -difference = (final-reference)+final = 2*final-reference
 
     # Define data for the second gauge chart
     trace2 = (go.Indicator(
@@ -233,7 +233,7 @@ def Current_profit_loss(person, selected_year, df_raw):
     # Define data for the third gauge chart
     trace3 = (go.Indicator(
         mode = "number+delta",
-        value= round(df.loc[person]['PPG'], 2), # ppg as defined by the first table
+        value= round(df.loc[person]['PPG'], 1), # ppg as defined by the first table
         title={'text': "Profit per Game"},
         delta= {'reference': get_ppg(person), 'increasing': {'color': "#006C5B"}, 'decreasing': {'color': "red"}},
         ))
