@@ -292,7 +292,7 @@ def Progress_Session(player_list, person, selected_year, df_raw):
 
     fig.update_layout(
         title='Session Progress',
-        xaxis_title='Session Number',
+        xaxis_title='Session Number ({})'.format(selected_year),
         yaxis_title='Net Profit/Loss',
         xaxis=dict(
             tickformat="%b",
@@ -366,6 +366,11 @@ def get_distribution(player_list, person, df):
 
     fig = ff.create_distplot(hist_data, group_labels, show_hist=False, colors=color_palette)
 
+    fig.update_layout(
+        title_text='Profit Distribution',
+        xaxis=dict(title='Profit/Loss')
+    )
+    
     return fig
 
 ################################################################################
