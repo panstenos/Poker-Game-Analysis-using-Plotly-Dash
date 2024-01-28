@@ -368,9 +368,10 @@ def get_distribution(player_list, person, df):
 
     fig.update_layout(
         title_text='Profit Distribution',
-        xaxis=dict(title='Profit/Loss')
+        title=dict(text='Profit Distribution', font=dict(size=20), x=0.5),
+        xaxis=dict(title='Profit/Loss', title_font=dict(size=16)),
     )
-    
+
     return fig
 
 ################################################################################
