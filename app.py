@@ -14,6 +14,7 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import plotly.express as px
 import matplotlib.pyplot as plt
+import plotly.figure_factory as ff
 
 import numpy as np
 
@@ -349,6 +350,26 @@ def Progress_Monthly(player_list, person, selected_year, df_raw):
 
 ################################################################################
 
+# player disrtibution plot
+def get_distribution(player_list, person, df):
+    def get_data(player):
+        df_data_person = df.iloc[:,3:].T
+        df_data_person = df_data_person[[player]].dropna()
+        return df_data_person[player]
+
+    hist_data = [get_data(person)]
+    for player in player_list:
+        hist_data += [get_data(player)]
+
+    group_labels = [person] + player_list
+    color_palette = ['blue', 'red', 'purple', 'orange', 'pink', 'gray', 'brown', 'green', 'yellow']
+
+    fig = ff.create_distplot(hist_data, group_labels, show_hist=False, colors=color_palette)
+
+    return fig
+
+################################################################################
+
 def player_history(selected_player, df_raw):
     df_data_person = df.iloc[:,3:].T
     df_data_person.index = pd.to_datetime(df_data_person.index, dayfirst=True).strftime('%y%m%d') #convert to this format to sort the dates
@@ -531,6 +552,7 @@ def render_content(tab):
             dcc.Checklist(id='Comparison-Checklist', value=[], inline=True),
             html.Div(id='session-progress'),       
             html.Div(id='monthly-progress'),  # Container for the monthly personal data
+            html.Div(id='player-profit-distribution'),
             html.Div(id='player-history-table', style={'width':'40%', 'margin':'0 auto'}),
             #html.Div(id='gauge-chart'),  # Container for the gauge charts
         ])
@@ -581,6 +603,12 @@ def update_progress_session_chart(selected_people_checklist, selected_person_dro
 @app.callback(Output('monthly-progress', 'children'), [Input('Comparison-Checklist', 'value'), Input('Player', 'value'), Input('main-dropdown', 'value')])
 def update_progress_montly_chart(selected_people_checklist, selected_person_dropdown, selected_year):
     fig = Progress_Monthly(selected_people_checklist, selected_person_dropdown, selected_year, df)
+    return dcc.Graph(figure=fig)
+
+# Callback to update the monthly progress chart based on the selected person    
+@app.callback(Output('player-profit-distribution', 'children'), [Input('Comparison-Checklist', 'value'), Input('Player', 'value')])
+def update_player_disrtribution(selected_people_checklist, selected_person_dropdown):
+    fig = get_distribution(selected_people_checklist, selected_person_dropdown, df)
     return dcc.Graph(figure=fig)
 
 # Callback to update the player history based on the selected person  
