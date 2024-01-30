@@ -124,6 +124,58 @@ def make_table(row, selected_year, df_raw):
 
 ################################################################################
 
+# Year Stats
+
+def year_table_stats(selected_year, df_raw):
+    df2, dftime, dftime2, dftime3 = df_selected_year(df=df_raw, selected_year=selected_year)
+    
+    df2 = df2.loc[namelist]
+    df2 = df2.iloc[:,:3]
+    df2 = df2.astype(float)
+    df2 = df2.reset_index().rename(columns={'index':'Player', 'NET': 'Net Profit', 'PPG': 'Profit per Game', 'TABLES': 'Games Played'}).sort_values(by='Net Profit')
+    df2 = df2.sort_values(by='Net Profit', ascending=False)
+    df2['Profit per Game'] = df2['Profit per Game'].apply(lambda x: f'{x:.2f}')
+    df2['Net Profit'] = df2['Net Profit'].apply(lambda x: f'{x:.2f}')
+    data = df2.to_dict(orient='records')
+
+    fig = dash_table.DataTable(
+        columns=[{'name': col, 'id': col} for col in df2.columns],
+        data=data,
+        style_table={'fontSize': 22},
+        style_data={'whiteSpace': 'normal', 'height': 'auto'},
+        style_cell={'textAlign': 'center', 'padding': '10px'},   
+    )
+    return fig
+
+################################################################################
+
+# All Time Stats
+
+def all_time_table_stats(df_raw):
+    df2 = df_raw.copy()
+
+    df2.fillna(0, inplace=True)
+
+    df2 = df2.loc[namelist]
+    df2 = df2.iloc[:,:3]
+    df2 = df2.astype(float)
+    df2 = df2.reset_index().rename(columns={'index':'Player', 'NET': 'Net Profit', 'PPG': 'Profit per Game', 'TABLES': 'Games Played'}).sort_values(by='Net Profit')
+    df2 = df2.sort_values(by='Net Profit', ascending=False)
+    df2['Profit per Game'] = df2['Profit per Game'].apply(lambda x: f'{x:.2f}')
+    df2['Net Profit'] = df2['Net Profit'].apply(lambda x: f'{x:.2f}')
+    data = df2.to_dict(orient='records')
+
+    fig = dash_table.DataTable(
+        columns=[{'name': col, 'id': col} for col in df2.columns],
+        data=data,
+        style_table={'fontSize': 22},
+        style_data={'whiteSpace': 'normal', 'height': 'auto'},
+        style_cell={'textAlign': 'center', 'padding': '10px'},   
+    )
+    return fig
+
+################################################################################
+
 # Current Profit/Loss
 def Status_bar(player_list, selected_year, df_raw):
     # Get date of the selected year only
@@ -137,9 +189,7 @@ def Status_bar(player_list, selected_year, df_raw):
     # Create the bar chart with Plotly Express
     fig = px.bar(df, x='Net Profit/Loss', y='Player', text='Net Profit/Loss', orientation='h')
     
-    # Add a title and axis labels
     fig.update_layout(
-        title='Net Profit/Loss for Players',
         xaxis_title='Net Profit/Loss',
         yaxis_title='Player',
         xaxis=dict(
@@ -171,7 +221,6 @@ def Time_Lapse(player_list, selected_year, df_raw):
     fig = px.bar(dftime_melt,  
                 x='Net Profit/Loss', y = "Player", animation_frame="Date", range_x=(-200,300), height=600, hover_data=['Net Profit/Loss'],color='Net Profit/Loss', range_color=(-500,200), orientation= 'h')
     fig.update_layout(
-        title="Time Lapse of Profit/Loss of every player",
         xaxis_title="Date",
         yaxis_title="Net Profit/Loss",
         xaxis=dict(
@@ -214,7 +263,7 @@ def Current_profit_loss(person, selected_year, df_raw):
     
     # Create a subplot grid with 1 row and 4 columns
     fig = make_subplots(rows=1, cols=4)
-
+    
     # Define data for the first gauge chart
     trace1 = (go.Indicator(
         mode = "number+delta",
@@ -291,7 +340,6 @@ def Progress_Session(player_list, person, selected_year, df_raw):
         fig.add_trace(player_line)
 
     fig.update_layout(
-        title='Session Progress',
         xaxis_title='Session Number ({})'.format(selected_year),
         yaxis_title='Net Profit/Loss',
         xaxis=dict(
@@ -331,7 +379,6 @@ def Progress_Monthly(player_list, person, selected_year, df_raw):
 
     # Customize the layout, including the title
     fig.update_layout(
-        title=' Monthly Progress',  # Set your desired title here
         xaxis_title='Month ({})'.format(selected_year),
         yaxis_title='Net Profit/Loss',
         xaxis=dict(
@@ -350,7 +397,7 @@ def Progress_Monthly(player_list, person, selected_year, df_raw):
 
 ################################################################################
 
-# player disrtibution plot
+# Player Distribution Plot
 def get_distribution(player_list, person, df):
     def get_data(player):
         df_data_person = df.iloc[:,3:].T
@@ -367,8 +414,6 @@ def get_distribution(player_list, person, df):
     fig = ff.create_distplot(hist_data, group_labels, show_hist=False, colors=color_palette)
 
     fig.update_layout(
-        title_text='Profit Distribution',
-        title=dict(text='Profit Distribution', font=dict(size=20), x=0.5),
         xaxis=dict(title='Profit/Loss', title_font=dict(size=16)),
     )
 
@@ -376,6 +421,7 @@ def get_distribution(player_list, person, df):
 
 ################################################################################
 
+# Player History
 def player_history(selected_player, df_raw):
     df_data_person = df.iloc[:,3:].T
     df_data_person.index = pd.to_datetime(df_data_person.index, dayfirst=True).strftime('%y%m%d') #convert to this format to sort the dates
@@ -522,6 +568,7 @@ server = app.server
 
 # App layout
 app.layout = html.Div([
+    html.H1('5F Casino', style={'textAlign': 'center', 'fontSize': 50}),
     dcc.Dropdown(
         id='main-dropdown',
         options=[{'label': year, 'value': year} for year in yearlist],
@@ -532,15 +579,15 @@ app.layout = html.Div([
         id='tabs',
         value='personal',
         children=[
-            dcc.Tab(label='Personal', value='personal'),
-            dcc.Tab(label='Global', value='global'),
+            dcc.Tab(label='Player Data', value='personal'),
+            dcc.Tab(label='Table Data', value='global'),
         ],
         style={'font-size': '24px'},
     ),
 
     # Hidden div to store the DataFrame as JSON
     dcc.Store(id='df-store', data=df.to_json(orient='split')),
-
+    html.Div(id='dummy-input', style={'display': 'none'}), # hidden layer for the dummy-input 
     html.Div(id='page-content'),
 ])
 
@@ -556,9 +603,13 @@ def render_content(tab):
             ),
             html.Div(id='current-profit'),
             dcc.Checklist(id='Comparison-Checklist', value=[], inline=True),
-            html.Div(id='session-progress'),       
+            html.H2("Session Progress", style={'text-align': 'center'}),
+            html.Div(id='session-progress'),
+            html.H2("Monthly Progress", style={'text-align': 'center'}),
             html.Div(id='monthly-progress'),  # Container for the monthly personal data
+            html.H2("Profit Disrtibution", style={'text-align': 'center'}),
             html.Div(id='player-profit-distribution'),
+            html.H2("All-Time Player Data", style={'text-align': 'center'}),
             html.Div(id='player-history-table', style={'width':'40%', 'margin':'0 auto'}),
             #html.Div(id='gauge-chart'),  # Container for the gauge charts
         ])
@@ -569,7 +620,7 @@ def render_content(tab):
                 value=0,
                 style={'width': '100%'}
             ),
-            html.Div(id='results-table-container', style={'margin-bottom': '50px'}),  # Change id to 'results-table-container'
+            html.Div(id='results-table-container', style={'margin-bottom': '50px'}),
             dcc.Checklist(
                 id='Name-Checklist',
                 options=[{'label': person, 'value': person} for person in namelist],
@@ -577,8 +628,14 @@ def render_content(tab):
                 labelStyle={'font-size': '24px',},  # Increase font size and center labels
                 inline=True,
             ),
+            html.H2("Net Profit/Loss", style={'text-align': 'center'}),
             html.Div(id='bar-plot'),
+            html.H2("Time Lapse of Net Profit/Loss", style={'text-align': 'center'}),
             html.Div(id='time-lapse'),
+            html.H2(id="selected-year-text", children='2024 Table Stats', style={'text-align': 'center'}),
+            html.Div(id='year-table-stats', style={'width':'50%', 'margin':'0 auto'}),    
+            html.H2("All-Time Table Stats", style={'text-align': 'center'}),
+            html.Div(id='all-time-table-stats', style={'width':'50%', 'margin':'0 auto'}),       
         ])
     
 # Callback to update the current profit/loss value
@@ -660,6 +717,23 @@ def update_graph(selected_people, selected_year):
 def update_graph(selected_people, selected_year):
     fig = Time_Lapse(selected_people, selected_year, df)
     return dcc.Graph(figure=fig)
+
+# Callback to update the H2 header
+@app.callback(Output('selected-year-text', 'children'), Input('main-dropdown', 'value'))
+def update_header_text(selected_year):
+    return '{} Table Stats'.format(selected_year)
+
+# Callback to update the table stats based on the selected year  
+@app.callback(Output('year-table-stats', 'children'), Input('main-dropdown', 'value'))
+def update_all_time_table_stats(selected_year):
+    fig = year_table_stats(selected_year, df)
+    return fig
+
+# Callback to update the all-time table stats
+@app.callback(Output('all-time-table-stats', 'children'), Input('dummy-input', 'children'))
+def update_all_time_table_stats(dummy_input):
+    fig = all_time_table_stats(df)
+    return fig
 
 
 if __name__ == '__main__':
