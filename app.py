@@ -696,7 +696,7 @@ def update_game_dropdown(selected_year, df_json):
     df = pd.read_json(df_json, orient='split')
     
     df, dftime, dftime2, dftime3 = df_selected_year(df=df, selected_year=selected_year)
-    updated_options = [{'label': '{1} - Session {0}'.format(i+1, pd.to_datetime(dftime2.index.values[i]).strftime('%d-%b')), 'value': i} for i in range(dftime2.shape[0])]
+    updated_options = [{'label': '{1} - Session {0}'.format(i+1, pd.to_datetime(dftime2.index.values[i], format='%d/%m/%Y').strftime('%d-%b')), 'value': i} for i in range(dftime2.shape[0])]
     updated_value = dftime2.shape[0] - 1  # Default to the last game
     return updated_options, updated_value
 
