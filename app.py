@@ -607,7 +607,7 @@ def render_content(tab):
             html.Div(id='session-progress'),
             html.H2("Monthly Progress", style={'text-align': 'center'}),
             html.Div(id='monthly-progress'),  # Container for the monthly personal data
-            html.H2("Profit Disrtibution", style={'text-align': 'center'}),
+            html.H2("All-Time Profit Distribution", style={'text-align': 'center'}),
             html.Div(id='player-profit-distribution'),
             html.H2("All-Time Player Data", style={'text-align': 'center'}),
             html.Div(id='player-history-table', style={'width':'40%', 'margin':'0 auto'}),
