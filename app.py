@@ -152,8 +152,12 @@ def year_table_stats(selected_year, df_raw):
 # All Time Stats
 
 def all_time_table_stats(df_raw):
-    df2 = df_raw.copy()
+    df2 = df_raw.iloc[:, 3:].copy()
 
+    df2.fillna(0, inplace=True)
+    df2.insert(0, 'NET', df2.sum(axis=1))
+    df2.insert(1, 'PPG', df.iloc[:,1:].mean(axis=1))
+    df2.insert(2, 'TABLES', df.iloc[:,2:].count(axis=1))
     df2.fillna(0, inplace=True)
 
     df2 = df2.loc[namelist]
