@@ -222,8 +222,12 @@ def Time_Lapse(player_list, selected_year, df_raw):
 
     dftime_melt = melt_data(dftime)
     dftime_melt = dftime_melt[dftime_melt['Player'].isin(player_list)] #update the dataframe to include only the names selected
+
+    max_value = dftime_melt['Net Profit/Loss'].max()//50*50+50
+    min_value = dftime_melt['Net Profit/Loss'].min()//50*50
+
     fig = px.bar(dftime_melt,  
-                x='Net Profit/Loss', y = "Player", animation_frame="Date", range_x=(-200,300), height=600, hover_data=['Net Profit/Loss'],color='Net Profit/Loss', range_color=(-500,200), orientation= 'h')
+                x='Net Profit/Loss', y = "Player", animation_frame="Date", height=600, hover_data=['Net Profit/Loss'],color='Net Profit/Loss', orientation= 'h', range_x=(min_value, max_value))
     fig.update_layout(
         xaxis_title="Date",
         yaxis_title="Net Profit/Loss",
