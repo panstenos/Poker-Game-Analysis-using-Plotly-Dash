@@ -48,7 +48,10 @@ yearlist = np.sort(unique_years)[::-1]
 
 ################################################################################
 
+# Initialize the namelist
 namelist = ['Panos', 'Ashish', 'Kartik', 'Akshaye', 'Chris', 'Sid', 'Tanish', 'Yufeng', 'Soumil']
+# Sort the names by all-time profit
+namelist = df.loc[namelist, df.columns[3:]].T.sum().sort_values(ascending=False).index.to_list()
 
 ################################################################################
 
@@ -106,6 +109,36 @@ def melt_data(dftime):
 
 ################################################################################
 
+# Helper function for plotly plots
+
+def update_plotly_background(fig, x_zeroline=True, y_zeroline=True, x_grid=True, y_grid=True):
+    fig.update_layout(
+        plot_bgcolor='white',
+    )
+    fig.update_xaxes(
+        mirror=True,
+        ticks='outside',
+        showline=True,
+        linecolor='black',
+        gridcolor='lightgrey',
+        zeroline=True if x_zeroline==True else False,
+        zerolinecolor='lightgrey',
+        showgrid=False if x_grid==False else True
+    )
+
+    fig.update_yaxes(
+        mirror=True,
+        ticks='outside',
+        showline=True,
+        linecolor='black',
+        gridcolor='lightgrey',
+        zeroline=True if y_zeroline==True else False,
+        zerolinecolor='lightgrey',
+        showgrid=False if y_grid==False else True
+    )
+
+################################################################################
+
 # Group Analysis
 
 # Session Results
@@ -128,22 +161,29 @@ def make_table(row, selected_year, df_raw):
 
 def year_table_stats(selected_year, df_raw):
     df2, dftime, dftime2, dftime3 = df_selected_year(df=df_raw, selected_year=selected_year)
-    
     df2 = df2.loc[namelist]
-    df2 = df2.iloc[:,:3]
+    df2 = df2.iloc[:, :3]
     df2 = df2.astype(float)
-    df2 = df2.reset_index().rename(columns={'index':'Player', 'NET': 'Net Profit', 'PPG': 'Profit per Game', 'TABLES': 'Games Played'}).sort_values(by='Net Profit')
+    df2 = df2.reset_index().rename(columns={'index': 'Player', 'NET': 'Net Profit', 'PPG': 'Profit per Game', 'TABLES': 'Games Played'}).sort_values(by='Net Profit')
     df2 = df2.sort_values(by='Net Profit', ascending=False)
-    df2['Profit per Game'] = df2['Profit per Game'].apply(lambda x: f'{x:.2f}')
-    df2['Net Profit'] = df2['Net Profit'].apply(lambda x: f'{x:.2f}')
-    data = df2.to_dict(orient='records')
+    df2['Profit per Game'] = df2['Profit per Game'].astype(float).round(2)
+    df2['Net Profit'] = df2['Net Profit'].astype(float).round(2)
 
+    data = df2.to_dict(orient='records')
     fig = dash_table.DataTable(
-        columns=[{'name': col, 'id': col} for col in df2.columns],
+        #columns=[{'name': col, 'id': col} for col in df2.columns],
+        columns=[
+            {'name': 'Player', 'id': 'Player'},
+            {'name': 'Net Profit', 'id': 'Net Profit', 'type': 'numeric', 'format': {'specifier': '.2f'}},
+            {'name': 'Profit per Game', 'id': 'Profit per Game', 'type': 'numeric', 'format': {'specifier': '.2f'}},
+            {'name': 'Games Played', 'id': 'Games Played', 'type': 'numeric'}
+        ],
         data=data,
         style_table={'fontSize': 22},
         style_data={'whiteSpace': 'normal', 'height': 'auto'},
-        style_cell={'textAlign': 'center', 'padding': '10px'},   
+        style_cell={'textAlign': 'center', 'padding': '10px'},
+        sort_action='native',
+        sort_mode='multi',
     )
     return fig
 
@@ -169,11 +209,19 @@ def all_time_table_stats(df_raw):
     data = df2.to_dict(orient='records')
 
     fig = dash_table.DataTable(
-        columns=[{'name': col, 'id': col} for col in df2.columns],
+        #columns=[{'name': col, 'id': col} for col in df2.columns],
+        columns=[
+            {'name': 'Player', 'id': 'Player'},
+            {'name': 'Net Profit', 'id': 'Net Profit', 'type': 'numeric', 'format': {'specifier': '.2f'}},
+            {'name': 'Profit per Game', 'id': 'Profit per Game', 'type': 'numeric', 'format': {'specifier': '.2f'}},
+            {'name': 'Games Played', 'id': 'Games Played', 'type': 'numeric'}
+        ],
         data=data,
         style_table={'fontSize': 22},
         style_data={'whiteSpace': 'normal', 'height': 'auto'},
         style_cell={'textAlign': 'center', 'padding': '10px'},   
+        sort_action='native',
+        sort_mode='multi',
     )
     return fig
 
@@ -209,6 +257,7 @@ def Status_bar(player_list, selected_year, df_raw):
 
     # Show values next to bars
     fig.update_traces(texttemplate='%{text:.2f}', textposition='outside')
+    update_plotly_background(fig, y_grid=False)
 
     return fig
 
@@ -242,8 +291,63 @@ def Time_Lapse(player_list, selected_year, df_raw):
         )
     )
 
-    fig.update_traces(textfont_size=12, textangle=0, textposition="outside",overwrite=True, )  
+    fig.update_traces(textfont_size=12, textangle=0, textposition="outside", overwrite=True,)  
     fig.layout.updatemenus[0].buttons[0].args[1]["frame"]["duration"] = 600
+    update_plotly_background(fig, y_zeroline=False, y_grid=False)
+    
+    return fig
+
+################################################################################
+
+# Yearly Rank Plot
+
+def rank_over_session(selected_year, df_raw):
+    _, dftime, _, _ = df_selected_year(df=df_raw, selected_year=selected_year)
+    dftime_melt = melt_data(dftime)
+    dftime_melt = dftime_melt[dftime_melt['Player'].isin(namelist)]
+
+    dfc = dftime.loc[:, namelist]
+
+    ranked_df = dfc.rank(axis=1, method='average', ascending=False)
+    ranked_df.index = ranked_df.index + 1
+
+    ranked_df_long = ranked_df.reset_index().melt(id_vars='index', var_name='Player', value_name='Rank').rename(columns={'index': 'Session Number'})
+
+    color_palette = ['red', 'purple', 'orange', 'blue', 'gray', 'brown', 'green', 'black', 'lime']
+
+    # Create the line plot
+    fig = px.line(ranked_df_long, 
+                x='Session Number', 
+                y='Rank', 
+                color='Player', 
+                markers=True,
+                height=600,
+                color_discrete_sequence=color_palette,
+                category_orders={'Rank': sorted(ranked_df_long['Rank'].unique())},
+                hover_data={'Rank': True, 'Player': True, 'Session Number': True})
+
+    # Update hover template to control the order and format
+    fig.update_traces(
+        hovertemplate='<b>Rank: %{y}</b><br>Player: %{fullData.name}<br>Session Number: %{x}<extra></extra>',
+    )
+
+    # Update the layout to better reflect the data
+    fig.update_layout(
+        yaxis=dict(
+            title='Rank',
+            autorange='reversed',  # Reverse the order of the y-axis
+            dtick=1
+        ),
+        legend_title='Player',
+        xaxis=dict(
+            title='Session Number',
+            tickmode='linear',
+            tick0=0,
+            dtick=1
+        )
+    )
+    update_plotly_background(fig, x_zeroline=False, y_grid=False)
+    
     return fig
 
 ################################################################################
@@ -328,19 +432,19 @@ def Progress_Session(player_list, person, selected_year, df_raw):
 
     x_data = np.arange(1, len(dftime[person]) + 1)
 
-    fig = px.line() #initialise figure
+    fig = px.line(height=600,) # Initialize figure
 
     # Add the player data line first
-    player_line = go.Scatter(x=x_data, y=dftime[person], mode='lines', name='Actual ({})'.format(person), line=dict(color='blue'))
+    player_line = go.Scatter(x=x_data, y=dftime[person], mode='lines', name='{}'.format(person), line=dict(color='blue'))
     fig.add_trace(player_line)
 
     # Add the 5-day average data
     if dftime.shape[0] >= 6:
-        average_5_game = go.Scatter(x=np.arange(3, dftime[person].shape[0]-1, 1), y=dftime[person].rolling(window=5).mean().dropna().values, mode='lines', name='5-game avg ({})'.format(person), line=dict(color='black'))
+        average_5_game = go.Scatter(x=np.arange(3, dftime[person].shape[0]-1, 1), y=dftime[person].rolling(window=5).mean().dropna().values, mode='lines', name='{} (5-game avg)'.format(person), line=dict(color='mediumblue'))
         fig.add_trace(average_5_game)
     
-    # Add the progress lines of each other player, truncate to 7 players
-    color_palette = ['red', 'purple', 'orange', 'pink', 'gray', 'brown', 'green', 'yellow'] # define color palette
+    # Add the progress lines of each other player
+    color_palette = ['red', 'purple', 'orange', 'gray', 'brown', 'green', 'black', 'lime']
 
     for player in range(len(player_list[:8])):
         player_line = go.Scatter(x=x_data, y=dftime[player_list[player]], mode='lines', name=player_list[player], line=dict(color=color_palette[player]))
@@ -353,6 +457,7 @@ def Progress_Session(player_list, person, selected_year, df_raw):
             tickformat="%b",
             showgrid=True,
             tickfont = {'size':16},
+            tickmode='linear',
         ),
         title_x=0.5,
         title_font = {'size':20},
@@ -360,6 +465,8 @@ def Progress_Session(player_list, person, selected_year, df_raw):
             tickfont = {'size':16},
         )
     )
+    update_plotly_background(fig)
+    
     return fig
 
 ################################################################################
@@ -371,14 +478,14 @@ def Progress_Monthly(player_list, person, selected_year, df_raw):
 
     x_data = pd.to_datetime(dftime['Date'] + f"-{selected_year}", format='%d-%b-%Y')
 
-    fig = px.line() #initialise figure
+    fig = px.line(height=600,) #initialise figure
 
     # Add the player data line
     player_line = go.Scatter(x=x_data, y=dftime[person], mode='lines', name='({})'.format(person), line=dict(color='blue'))
     fig.add_trace(player_line)
 
-    # Add the progress lines of each other player, truncate to 7 players
-    color_palette = ['red', 'purple', 'orange', 'pink', 'gray', 'brown', 'green', 'yellow'] # define color palette
+    # Add the progress lines of each other player
+    color_palette = ['red', 'purple', 'orange', 'gray', 'brown', 'green', 'black', 'lime']
 
     for player in range(len(player_list[:8])):
         player_line = go.Scatter(x=x_data, y=dftime[player_list[player]], mode='lines', name=player_list[player], line=dict(color=color_palette[player]))
@@ -399,7 +506,8 @@ def Progress_Monthly(player_list, person, selected_year, df_raw):
             tickfont = {'size':16},
         )
     )
-
+    update_plotly_background(fig)
+    
     return fig
 
 ################################################################################
@@ -416,14 +524,16 @@ def get_distribution(player_list, person, df):
         hist_data += [get_data(player)]
 
     group_labels = [person] + player_list
-    color_palette = ['blue', 'red', 'purple', 'orange', 'pink', 'gray', 'brown', 'green', 'yellow']
+    color_palette = ['blue', 'red', 'purple', 'orange', 'gray', 'brown', 'green', 'black', 'lime']
 
     fig = ff.create_distplot(hist_data, group_labels, show_hist=False, colors=color_palette)
 
     fig.update_layout(
         xaxis=dict(title='Profit/Loss', title_font=dict(size=16)),
+        height=600,
     )
-
+    update_plotly_background(fig)
+    
     return fig
 
 ################################################################################
@@ -575,7 +685,7 @@ server = app.server
 
 # App layout
 app.layout = html.Div([
-    html.H1('5F Casino', style={'textAlign': 'center', 'fontSize': 50}),
+    html.H1('5F Casino', style={'textAlign': 'center', 'fontSize': 70}),
     dcc.Dropdown(
         id='main-dropdown',
         options=[{'label': year, 'value': year} for year in yearlist],
@@ -608,17 +718,22 @@ def render_content(tab):
                 options=[{'label': person, 'value': person} for person in namelist],
                 value=namelist[0]  # Set the default value
             ),
+            html.H2(id='player-name', children='Panos', style={'textAlign': 'center', 'fontSize': 50}),
+
             html.Div(id='current-profit'),
+
             dcc.Checklist(id='Comparison-Checklist', value=[], inline=True),
             html.H2("Session Progress", style={'text-align': 'center'}),
             html.Div(id='session-progress'),
+
             html.H2("Monthly Progress", style={'text-align': 'center'}),
             html.Div(id='monthly-progress'),  # Container for the monthly personal data
+
             html.H2("All-Time Profit Distribution", style={'text-align': 'center'}),
             html.Div(id='player-profit-distribution'),
+
             html.H2("All-Time Player Data", style={'text-align': 'center'}),
-            html.Div(id='player-history-table', style={'width':'40%', 'margin':'0 auto'}),
-            #html.Div(id='gauge-chart'),  # Container for the gauge charts
+            html.Div(id='player-history-table', style={'height':'600px', 'overflow': 'scroll', 'width':'40%', 'margin':'0 auto'}),
         ])
     elif tab == 'global':
         return html.Div([
@@ -635,16 +750,33 @@ def render_content(tab):
                 labelStyle={'font-size': '24px',},  # Increase font size and center labels
                 inline=True,
             ),
+
+            # Profit/Loss bar plot
             html.H2("Net Profit/Loss", style={'text-align': 'center'}),
             html.Div(id='bar-plot'),
+
+            # Time Lapse plot
             html.H2("Time Lapse of Net Profit/Loss", style={'text-align': 'center'}),
             html.Div(id='time-lapse'),
+
+            # Rank Over Sessions line plot
+            html.H2(id="rank-over-session-text", children='2024 Player Rankings', style={'text-align': 'center'}),
+            html.Div(id='rank-over-sessions-line-plot'),
+
+            # Year Stats table
             html.H2(id="selected-year-text", children='2024 Table Stats', style={'text-align': 'center'}),
-            html.Div(id='year-table-stats', style={'width':'50%', 'margin':'0 auto'}),    
+            html.Div(id='year-table-stats', style={'width':'50%', 'margin':'0 auto'}),
+
+            # All-Time Stats table
             html.H2("All-Time Table Stats", style={'text-align': 'center'}),
             html.Div(id='all-time-table-stats', style={'width':'50%', 'margin':'0 auto'}),       
         ])
     
+# Callback to update the H1 header '<player name>'
+@app.callback(Output('player-name', 'children'), Input('Player', 'value'))
+def update_header_text(selected_person):
+    return '{}'.format(selected_person)
+
 # Callback to update the current profit/loss value
 @app.callback(Output('current-profit', 'children'), [Input('Player', 'value'), Input('main-dropdown', 'value')])
 def update_current_profit_loss_value(selected_person, selected_year):
@@ -725,14 +857,25 @@ def update_graph(selected_people, selected_year):
     fig = Time_Lapse(selected_people, selected_year, df)
     return dcc.Graph(figure=fig)
 
-# Callback to update the H2 header
+# Callback to update the H2 header '<year> Player Ranks'
+@app.callback(Output('rank-over-session-text', 'children'), Input('main-dropdown', 'value'))
+def update_header_text(selected_year):
+    return '{} Player Rankings'.format(selected_year)   
+
+# Callback to update the rank over sessions line plot 
+@app.callback(Output('rank-over-sessions-line-plot', 'children'), Input('main-dropdown', 'value'))
+def update_session_ranks(selected_year):
+    fig = rank_over_session(selected_year, df)
+    return dcc.Graph(figure=fig)     
+
+# Callback to update the H2 header '<year> Table Stats'
 @app.callback(Output('selected-year-text', 'children'), Input('main-dropdown', 'value'))
 def update_header_text(selected_year):
     return '{} Table Stats'.format(selected_year)
 
 # Callback to update the table stats based on the selected year  
 @app.callback(Output('year-table-stats', 'children'), Input('main-dropdown', 'value'))
-def update_all_time_table_stats(selected_year):
+def update_yearly_table_stats(selected_year):
     fig = year_table_stats(selected_year, df)
     return fig
 
@@ -741,7 +884,6 @@ def update_all_time_table_stats(selected_year):
 def update_all_time_table_stats(dummy_input):
     fig = all_time_table_stats(df)
     return fig
-
 
 if __name__ == '__main__':
     app.run_server(debug=False, port=int(os.environ.get('PORT', 8050)))
