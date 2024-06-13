@@ -13,12 +13,9 @@ from dash.dependencies import Output, Input, State
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import plotly.express as px
-import matplotlib.pyplot as plt
 import plotly.figure_factory as ff
 
 import numpy as np
-
-from sklearn.preprocessing import StandardScaler, MinMaxScaler
 
 '################################################################################'
 import pathlib
@@ -64,8 +61,7 @@ def df_selected_year(df, selected_year):
     df.insert(1, 'PPG', df.iloc[:,1:].mean(axis=1))
     df.insert(2, 'TABLES', df.iloc[:,2:].count(axis=1))
 
-    dftime2 = df.iloc[:,3:].T.copy() # to be used for personal form calculation
-    dftime3 = dftime2.copy() # to be used for global form calculation
+    dftime2 = df.iloc[:,3:].T.copy()
     df.fillna(0, inplace=True)
     dftime = df.iloc[:,2:].T.copy()
     
@@ -98,7 +94,7 @@ def df_selected_year(df, selected_year):
     # Format the 'Date' column
     dftime['Date'] = dftime['Date'].dt.strftime('%d-%b')
 
-    return df, dftime, dftime2, dftime3
+    return df, dftime, dftime2
 
 ################################################################################
 
@@ -160,18 +156,18 @@ def make_table(row, selected_year, df_raw):
 # Year Stats
 
 def year_table_stats(selected_year, df_raw):
-    df2, dftime, dftime2, dftime3 = df_selected_year(df=df_raw, selected_year=selected_year)
-    df2 = df2.loc[namelist]
-    df2 = df2.iloc[:, :3]
-    df2 = df2.astype(float)
-    df2 = df2.reset_index().rename(columns={'index': 'Player', 'NET': 'Net Profit', 'PPG': 'Profit per Game', 'TABLES': 'Games Played'}).sort_values(by='Net Profit')
-    df2 = df2.sort_values(by='Net Profit', ascending=False)
-    df2['Profit per Game'] = df2['Profit per Game'].astype(float).round(2)
-    df2['Net Profit'] = df2['Net Profit'].astype(float).round(2)
+    df, _, _ = df_selected_year(df=df_raw, selected_year=selected_year)
+    df = df.loc[namelist]
+    df = df.iloc[:, :3]
+    df = df.astype(float)
+    df = df.reset_index().rename(columns={'index': 'Player', 'NET': 'Net Profit', 'PPG': 'Profit per Game', 'TABLES': 'Games Played'}).sort_values(by='Net Profit')
+    df = df.sort_values(by='Net Profit', ascending=False)
+    df['Profit per Game'] = df['Profit per Game'].astype(float).round(2)
+    df['Net Profit'] = df['Net Profit'].astype(float).round(2)
 
-    data = df2.to_dict(orient='records')
+    data = df.to_dict(orient='records')
     fig = dash_table.DataTable(
-        #columns=[{'name': col, 'id': col} for col in df2.columns],
+        #columns=[{'name': col, 'id': col} for col in df.columns],
         columns=[
             {'name': 'Player', 'id': 'Player'},
             {'name': 'Net Profit', 'id': 'Net Profit', 'type': 'numeric', 'format': {'specifier': '.2f'}},
@@ -182,6 +178,7 @@ def year_table_stats(selected_year, df_raw):
         style_table={'fontSize': 22},
         style_data={'whiteSpace': 'normal', 'height': 'auto'},
         style_cell={'textAlign': 'center', 'padding': '10px'},
+        # allow sorting
         sort_action='native',
         sort_mode='multi',
     )
@@ -219,7 +216,8 @@ def all_time_table_stats(df_raw):
         data=data,
         style_table={'fontSize': 22},
         style_data={'whiteSpace': 'normal', 'height': 'auto'},
-        style_cell={'textAlign': 'center', 'padding': '10px'},   
+        style_cell={'textAlign': 'center', 'padding': '10px'},
+        # allow sorting
         sort_action='native',
         sort_mode='multi',
     )
@@ -229,15 +227,10 @@ def all_time_table_stats(df_raw):
 
 # Current Profit/Loss
 def Status_bar(player_list, selected_year, df_raw):
-    # Get date of the selected year only
-    df, dftime, dftime2, dftime3 = df_selected_year(df=df_raw, selected_year=selected_year)
-
-    data = [round(value, 2) for value in dftime.loc[dftime.index[-1], player_list].tolist()] #get the current p/l from the last row of the dataframe
-    
-    # Create a DataFrame for the bar chart
+    df, dftime, _ = df_selected_year(df=df_raw, selected_year=selected_year)
+    # get the current p/l from the last row of the dataframe
+    data = [round(value, 2) for value in dftime.loc[dftime.index[-1], player_list].tolist()]
     df = pd.DataFrame({'Player': player_list, 'Net Profit/Loss': data})
-    
-    # Create the bar chart with Plotly Express
     fig = px.bar(df, x='Net Profit/Loss', y='Player', text='Net Profit/Loss', orientation='h')
     
     fig.update_layout(
@@ -255,18 +248,16 @@ def Status_bar(player_list, selected_year, df_raw):
         )
     )
 
-    # Show values next to bars
     fig.update_traces(texttemplate='%{text:.2f}', textposition='outside')
     update_plotly_background(fig, y_grid=False)
-
+    
     return fig
 
 ################################################################################
 
 # Time Lapse Bar Plot
 def Time_Lapse(player_list, selected_year, df_raw):
-    # Get date of the selected year only
-    df, dftime, dftime2, dftime3 = df_selected_year(df=df_raw, selected_year=selected_year)
+    _, dftime, _ = df_selected_year(df=df_raw, selected_year=selected_year)
 
     dftime_melt = melt_data(dftime)
     dftime_melt = dftime_melt[dftime_melt['Player'].isin(player_list)] #update the dataframe to include only the names selected
@@ -275,7 +266,8 @@ def Time_Lapse(player_list, selected_year, df_raw):
     min_value = dftime_melt['Net Profit/Loss'].min()//50*50
 
     fig = px.bar(dftime_melt,  
-                x='Net Profit/Loss', y = "Player", animation_frame="Date", height=600, hover_data=['Net Profit/Loss'],color='Net Profit/Loss', orientation= 'h', range_x=(min_value, max_value))
+        x='Net Profit/Loss', y = "Player", animation_frame="Date", height=600, hover_data=['Net Profit/Loss'],color='Net Profit/Loss', orientation= 'h', range_x=(min_value, max_value))
+    
     fig.update_layout(
         xaxis_title="Date",
         yaxis_title="Net Profit/Loss",
@@ -302,7 +294,7 @@ def Time_Lapse(player_list, selected_year, df_raw):
 # Yearly Rank Plot
 
 def rank_over_session(selected_year, df_raw):
-    _, dftime, _, _ = df_selected_year(df=df_raw, selected_year=selected_year)
+    _, dftime, _ = df_selected_year(df=df_raw, selected_year=selected_year)
     dftime_melt = melt_data(dftime)
     dftime_melt = dftime_melt[dftime_melt['Player'].isin(namelist)]
 
@@ -331,7 +323,6 @@ def rank_over_session(selected_year, df_raw):
         hovertemplate='<b>Rank: %{y}</b><br>Player: %{fullData.name}<br>Session Number: %{x}<extra></extra>',
     )
 
-    # Update the layout to better reflect the data
     fig.update_layout(
         yaxis=dict(
             title='Rank',
@@ -354,8 +345,7 @@ def rank_over_session(selected_year, df_raw):
 
 # Player Analysis
 def Current_profit_loss(person, selected_year, df_raw):
-    # Get date of the selected year only
-    df, dftime, dftime2, dftime3 = df_selected_year(df=df_raw, selected_year=selected_year)
+    df, dftime, dftime2 = df_selected_year(df=df_raw, selected_year=selected_year)
 
     def get_ppg(person): # find the previous profit per game statistic
         ppg = df.loc[person]['PPG']
@@ -372,10 +362,9 @@ def Current_profit_loss(person, selected_year, df_raw):
         reference_pos = int(reference_pos[person])
         return position, reference_pos
     
-    # Create a subplot grid with 1 row and 4 columns
     fig = make_subplots(rows=1, cols=4)
     
-    # Define data for the first gauge chart
+    # First gauge chart
     trace1 = (go.Indicator(
         mode = "number+delta",
         value= get_position(dftime, person)[0],
@@ -383,7 +372,7 @@ def Current_profit_loss(person, selected_year, df_raw):
         delta= {'reference': 2*get_position(dftime, person)[0] - get_position(dftime, person)[1], 'increasing': {'color': "#006C5B"}, 'decreasing': {'color': "red"}},
         )) # to reverse the sign of the reference number: -difference = (final-reference)+final = 2*final-reference
 
-    # Define data for the second gauge chart
+    # Second gauge chart
     trace2 = (go.Indicator(
         mode = "number+delta",
         value= int(dftime.loc[dftime.index[-1], person]), #Take the last value of the column
@@ -391,7 +380,7 @@ def Current_profit_loss(person, selected_year, df_raw):
         delta= {'reference': int(dftime.loc[dftime.index[-2], person]), 'increasing': {'color': "#006C5B"}, 'decreasing': {'color': "red"}},
         ))
 
-    # Define data for the third gauge chart
+    # Third gauge chart
     trace3 = (go.Indicator(
         mode = "number+delta",
         value= round(df.loc[person]['PPG'], 1), # ppg as defined by the first table
@@ -399,7 +388,7 @@ def Current_profit_loss(person, selected_year, df_raw):
         delta= {'reference': get_ppg(person), 'increasing': {'color': "#006C5B"}, 'decreasing': {'color': "red"}},
         ))
 
-    # Define data for the fourth gauge chart
+    # Fourth gauge chart
     trace4 = (go.Indicator(
         mode = "number+delta",
         value= int(df.loc[person]['TABLES']), # ppg as defined by the first table
@@ -428,7 +417,7 @@ def Current_profit_loss(person, selected_year, df_raw):
 # Session Progress Plot
 def Progress_Session(player_list, person, selected_year, df_raw):
     # Get date of the selected year only
-    df, dftime, dftime2, dftime3 = df_selected_year(df=df_raw, selected_year=selected_year)
+    _, dftime, _ = df_selected_year(df=df_raw, selected_year=selected_year)
 
     x_data = np.arange(1, len(dftime[person]) + 1)
 
@@ -466,7 +455,7 @@ def Progress_Session(player_list, person, selected_year, df_raw):
         )
     )
     update_plotly_background(fig)
-    
+
     return fig
 
 ################################################################################
@@ -474,7 +463,7 @@ def Progress_Session(player_list, person, selected_year, df_raw):
 # Monthly Progress Plot
 def Progress_Monthly(player_list, person, selected_year, df_raw):  
     # Get date of the selected year only
-    df, dftime, dftime2, dftime3 = df_selected_year(df=df_raw, selected_year=selected_year)
+    _, dftime, _ = df_selected_year(df=df_raw, selected_year=selected_year)
 
     x_data = pd.to_datetime(dftime['Date'] + f"-{selected_year}", format='%d-%b-%Y')
 
@@ -625,7 +614,7 @@ def render_content(tab):
             html.H2(id='player-name', children='Panos', style={'textAlign': 'center', 'fontSize': 50}),
             html.Div(id='current-profit'),
 
-            # Session Progress line plot
+            # Session Progress line plot        
             dcc.Checklist(id='Comparison-Checklist', value=[], inline=True),
             html.H2("Session Progress", style={'text-align': 'center'}),
             html.Div(id='session-progress'),
@@ -634,7 +623,7 @@ def render_content(tab):
             html.H2("Monthly Progress", style={'text-align': 'center'}),
             html.Div(id='monthly-progress'),
 
-            # All-Time Profit Distribution
+            # Player Profit Distribution
             html.H2("All-Time Profit Distribution", style={'text-align': 'center'}),
             html.Div(id='player-profit-distribution'),
 
@@ -671,10 +660,6 @@ def render_content(tab):
                 labelStyle={'font-size': '24px',},
                 inline=True,
             ),
-
-            # Profit/Loss bar plot
-            #html.H2("Net Profit/Loss", style={'text-align': 'center'}),
-            #html.Div(id='bar-plot'),
 
             # Time Lapse plot
             html.H2("Time Lapse of Net Profit/Loss", style={'text-align': 'center'}),
@@ -737,7 +722,7 @@ def update_game_dropdown(selected_year, df_json):
     # Convert the JSON data back to a DataFrame
     df = pd.read_json(df_json, orient='split')
     
-    df, dftime, dftime2, dftime3 = df_selected_year(df=df, selected_year=selected_year)
+    df, dftime, dftime2 = df_selected_year(df=df, selected_year=selected_year)
     updated_options = [{'label': '{1} - Session {0}'.format(i+1, pd.to_datetime(dftime2.index.values[i], format='%d/%m/%Y').strftime('%d-%b')), 'value': i} for i in range(dftime2.shape[0])]
     updated_value = dftime2.shape[0] - 1  # Default to the last game
     return updated_options, updated_value
