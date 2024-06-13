@@ -140,14 +140,15 @@ def update_plotly_background(fig, x_zeroline=True, y_zeroline=True, x_grid=True,
 # Session Results
 def make_table(row, selected_year, df_raw):
     # Get date of the selected year only
-    df, dftime, dftime2, dftime3 = df_selected_year(df=df_raw, selected_year=selected_year)
+    _, _, dftime2 = df_selected_year(df=df_raw, selected_year=selected_year)
 
     selected_data = dftime2.iloc[row:row + 1].dropna(axis=1).to_dict('records')
+    selected_data = [dict(sorted(selected_data[0].items(), key=lambda item: item[1], reverse=True))]
     fig = dash_table.DataTable(
-        id='results-table',  # Specify the id for the DataTable
+        id='results-table',
         columns=[{'name': col, 'id': col} for col in dftime2.iloc[row:row + 1].dropna(axis=1).columns],
         data=selected_data,
-        style_table={'fontSize': 22},  # Set the font size
+        style_table={'fontSize': 22},
     )
     return fig
 
@@ -421,7 +422,7 @@ def Progress_Session(player_list, person, selected_year, df_raw):
 
     x_data = np.arange(1, len(dftime[person]) + 1)
 
-    fig = px.line(height=600,) # Initialize figure
+    fig = px.line(height=550,)
 
     # Add the player data line first
     player_line = go.Scatter(x=x_data, y=dftime[person], mode='lines', name='{}'.format(person), line=dict(color='blue'))
@@ -467,10 +468,10 @@ def Progress_Monthly(player_list, person, selected_year, df_raw):
 
     x_data = pd.to_datetime(dftime['Date'] + f"-{selected_year}", format='%d-%b-%Y')
 
-    fig = px.line(height=600,) #initialise figure
+    fig = px.line(height=550,)
 
     # Add the player data line
-    player_line = go.Scatter(x=x_data, y=dftime[person], mode='lines', name='({})'.format(person), line=dict(color='blue'))
+    player_line = go.Scatter(x=x_data, y=dftime[person], mode='lines', name='{}'.format(person), line=dict(color='blue'))
     fig.add_trace(player_line)
 
     # Add the progress lines of each other player
