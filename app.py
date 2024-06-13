@@ -204,8 +204,8 @@ def all_time_table_stats(df_raw):
     df2 = df2.astype(float)
     df2 = df2.reset_index().rename(columns={'index':'Player', 'NET': 'Net Profit', 'PPG': 'Profit per Game', 'TABLES': 'Games Played'}).sort_values(by='Net Profit')
     df2 = df2.sort_values(by='Net Profit', ascending=False)
-    df2['Profit per Game'] = df2['Profit per Game'].apply(lambda x: f'{x:.2f}')
-    df2['Net Profit'] = df2['Net Profit'].apply(lambda x: f'{x:.2f}')
+    df2['Profit per Game'] = df2['Profit per Game'].astype(float).round(2)
+    df2['Net Profit'] = df2['Net Profit'].astype(float).round(2)
     data = df2.to_dict(orient='records')
 
     fig = dash_table.DataTable(
