@@ -577,103 +577,6 @@ def player_history(selected_player, df_raw):
 
 ################################################################################
 
-# Personal and Global Form Preprocessing
-def Form_Preprocessing(person, dftime2, dftime3):
-    # Personal Form
-    dftime5 = dftime2[person].dropna()
-    n = 4
-    dftime5 = pd.Series([sum(dftime5[i:i+n]) for i in range(0, len(dftime5)-n+1, 1)]) # sum n in a row together
-    x = np.array(dftime5).reshape(-1,1) #reshape to fit transform
-    filtered_data = StandardScaler().fit_transform(x) #normalise first 
-    filtered_data = MinMaxScaler().fit_transform(filtered_data)*10 #convert normalised data into min, max
-    filtered_data = [np.round(datum * 10) / 10 for datum in filtered_data]
-
-    # Global Form
-    # normalise the performance of all players in the playerlist based on the performance of these people:
-    dftime3 = dftime3[dftime3.columns[dftime3.columns.isin(namelist)]] 
-    if 'TABLES' in dftime3.index:  
-        dftime3.drop(index='TABLES' , inplace= True) #drop row with the number of tables
-    person_column = dftime3.pop(person)
-    dftime3[person] = person_column
-    global_list = []
-    for column in dftime3:
-        dftime4 = dftime3[column].dropna() #drop all NaN values
-        global_list.extend(pd.Series([sum(dftime4[i:i+n]) for i in range(0, len(dftime4)-n+1, 1)])) # sum 3 in a row together
-    filtered_data2 = StandardScaler().fit_transform(np.array(global_list).reshape(-1, 1)) #normalise first 
-    filtered_data2 = MinMaxScaler().fit_transform(filtered_data2)*10 #convert normalised data into min, max
-    filtered_data2 = [np.round(datum * 10) / 10 for datum in filtered_data2] #round data
-    
-    return filtered_data, filtered_data2
-
-################################################################################
-
-# Personal and Global Form Gauge charts
-def Gauge_Charts(person, selected_year, df):
-    # Get date of the selected year only
-    df, dftime, dftime2, dftime3 = df_selected_year(df=df, selected_year=selected_year)
-
-    filtered_data, filtered_data2 = Form_Preprocessing(person, dftime2, dftime3)
-    
-    # Create a subplot grid with 1 row and 2 columns
-    fig = make_subplots(rows=1, cols=2)
-
-    # Define data for the first gauge chart
-    trace1 = (go.Indicator(
-        mode = "gauge+number+delta",
-        value = float(filtered_data[-1][0]),
-        domain = {'x': [0, 1], 'y': [0, 1]},
-        title = {'text': "{} Personal Form".format(person), 'font': {'size': 20}},
-        delta = {'reference': int(filtered_data[-2][0]), 'increasing': {'color': "RebeccaPurple"}},
-        gauge = {
-            'axis': {'range': [None, 10], 'tickwidth': 1, 'tickcolor': "darkblue"},
-            'bar': {'color': "darkblue"},
-            'bgcolor': "white",
-            'borderwidth': 2,
-            'bordercolor': "gray",
-            'steps': [
-                {'range': [0, 5], 'color': 'red'},
-                {'range': [5, 10], 'color': 'cyan'}],
-            }))
-
-    # Define data for the second gauge chart
-    trace2 = (go.Indicator(
-        mode = "gauge+number+delta",
-        value = float(filtered_data2[-1][0]),
-        domain = {'x': [0, 1], 'y': [0, 1]},
-        title = {'text': "{} Global Form".format(person), 'font': {'size': 20}},
-        delta = {'reference': int(filtered_data2[-2][0]), 'increasing': {'color': "RebeccaPurple"}},
-        gauge = {
-            'axis': {'range': [None, 10], 'tickwidth': 1, 'tickcolor': "darkblue"},
-            'bar': {'color': "darkblue"},
-            'bgcolor': "white",
-            'borderwidth': 2,
-            'bordercolor': "gray",
-            'steps': [
-                {'range': [0, 5], 'color': 'red'},
-                {'range': [5, 10], 'color': 'cyan'}],
-            }))
-
-    fig.update_layout(
-        paper_bgcolor = "lavender",
-        font = {'color': "darkblue", 'family': "Arial"})
-    fig = make_subplots(
-        rows=1,
-        cols=2,
-        specs=[[{'type' : 'indicator'}, {'type' : 'indicator'}]],
-        )
-
-    fig.append_trace(trace1, row=1, col=1)
-    fig.append_trace(trace2, row=1, col=2)
-
-    return fig
-
-################################################################################
-
-
-
-
-################################################################################
-
 # Dash Board
 app = dash.Dash(__name__)
 app.config.suppress_callback_exceptions = True
@@ -713,55 +616,41 @@ app.layout = html.Div([
 def render_content(tab):
     if tab == 'personal':
         return html.Div([
+            # Player core stats
             dcc.Dropdown(
                 id='Player',
                 options=[{'label': person, 'value': person} for person in namelist],
                 value=namelist[0]  # Set the default value
             ),
             html.H2(id='player-name', children='Panos', style={'textAlign': 'center', 'fontSize': 50}),
-
             html.Div(id='current-profit'),
 
+            # Session Progress line plot
             dcc.Checklist(id='Comparison-Checklist', value=[], inline=True),
             html.H2("Session Progress", style={'text-align': 'center'}),
             html.Div(id='session-progress'),
 
+            # Monthly Progress line plot
             html.H2("Monthly Progress", style={'text-align': 'center'}),
-            html.Div(id='monthly-progress'),  # Container for the monthly personal data
+            html.Div(id='monthly-progress'),
 
+            # All-Time Profit Distribution
             html.H2("All-Time Profit Distribution", style={'text-align': 'center'}),
             html.Div(id='player-profit-distribution'),
 
+            # All-Time Player P/L
             html.H2("All-Time Player Data", style={'text-align': 'center'}),
             html.Div(id='player-history-table', style={'height':'600px', 'overflow': 'scroll', 'width':'40%', 'margin':'0 auto'}),
         ])
     elif tab == 'global':
         return html.Div([
+            # Last game results
             dcc.Dropdown(
                 id='row-dropdown',
                 value=0,
                 style={'width': '100%'}
             ),
             html.Div(id='results-table-container', style={'margin-bottom': '50px'}),
-            dcc.Checklist(
-                id='Name-Checklist',
-                options=[{'label': person, 'value': person} for person in namelist],
-                value=namelist[:],  # Select the first 5 people from the namelist
-                labelStyle={'font-size': '24px',},  # Increase font size and center labels
-                inline=True,
-            ),
-
-            # Profit/Loss bar plot
-            html.H2("Net Profit/Loss", style={'text-align': 'center'}),
-            html.Div(id='bar-plot'),
-
-            # Time Lapse plot
-            html.H2("Time Lapse of Net Profit/Loss", style={'text-align': 'center'}),
-            html.Div(id='time-lapse'),
-
-            # Rank Over Sessions line plot
-            html.H2(id="rank-over-session-text", children='2024 Player Rankings', style={'text-align': 'center'}),
-            html.Div(id='rank-over-sessions-line-plot'),
 
             # Year Stats table
             html.H2(id="selected-year-text", children='2024 Table Stats', style={'text-align': 'center'}),
@@ -769,7 +658,27 @@ def render_content(tab):
 
             # All-Time Stats table
             html.H2("All-Time Table Stats", style={'text-align': 'center'}),
-            html.Div(id='all-time-table-stats', style={'width':'50%', 'margin':'0 auto'}),       
+            html.Div(id='all-time-table-stats', style={'width':'50%', 'margin':'0 auto'}),
+
+            # Rank Over Sessions line plot
+            html.H2(id="rank-over-session-text", children='2024 Player Rankings', style={'text-align': 'center'}),
+            html.Div(id='rank-over-sessions-line-plot'),   
+
+            dcc.Checklist(
+                id='Name-Checklist',
+                options=[{'label': person, 'value': person} for person in namelist],
+                value=namelist[:],
+                labelStyle={'font-size': '24px',},
+                inline=True,
+            ),
+
+            # Profit/Loss bar plot
+            #html.H2("Net Profit/Loss", style={'text-align': 'center'}),
+            #html.Div(id='bar-plot'),
+
+            # Time Lapse plot
+            html.H2("Time Lapse of Net Profit/Loss", style={'text-align': 'center'}),
+            html.Div(id='time-lapse'),
         ])
     
 # Callback to update the H1 header '<player name>'
@@ -818,12 +727,6 @@ def update_player_disrtribution(selected_people_checklist, selected_person_dropd
 def update_player_history(selected_person):
     fig = player_history(selected_person, df)
     return fig
-
-# Callback to update the gauge charts based on the selected person  
-@app.callback(Output('gauge-chart', 'children'), [Input('Player', 'value'), Input('main-dropdown', 'value')])
-def update_gauge_charts(selected_person, selected_year):
-    fig = Gauge_Charts(selected_person, selected_year, df)
-    return dcc.Graph(figure=fig)
 
 ################################################################################
 
